@@ -68,5 +68,5 @@ def status_by_user(user_id, chat_id):
     rep = "Репутация: {}".format(int_from_db_answer(str(SQLighter.get_rep(db, user_id, chat_id)[0])))
     CR = "\n"
 
-    status = str.format("{line}{cr}{name}{cr}{activity}{cr}{top}{cr}{rep}{cr}{line}", line=line, cr=CR, name=name, activity=activity, top=top, rep=rep)
+    status = str.format("{line}{cr}{name}{cr}{activity}{cr}{messages}{cr}{top}{cr}{rep}{cr}{line}", line=line, cr=CR, name=name, activity=activity, messages=messages, top=top, rep=rep)
     return status
