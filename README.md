@@ -1,1 +1,1 @@
-# RepBot
+# ReleaseManagerBot
