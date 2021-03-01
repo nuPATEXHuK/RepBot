@@ -5,9 +5,6 @@ import config_loader as cl
 
 db = SQLighter(cl.get_DB())
 
-# Словари (работают аналогом swich-case)
-
-
 # Функция для возврата ключа по значению.
 # Пример: на входе список типа {Test1 : 12345, Test: 23456}, и нужный ID=12345, на выходе получаем имя "Test1".
 def get_key_by_value(value_list, value):
