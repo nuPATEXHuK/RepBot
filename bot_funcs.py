@@ -29,16 +29,22 @@ def change_rep(chat_id, message, from_user, to_user):
         if (message == "+"):
             current_rep = int_from_db_answer(str(SQLighter.get_rep(db, to_user, chat_id)[0]))
             SQLighter.change_rep(db, to_user, chat_id, current_rep + 1)
-            answer = str.format("@{} мур-мур-муркает ^.^ на @{}.\nРепутация повышена!", from_username, to_username)
+            answer = str.format("@{} мур-мур-муркает на @{}. Кавай-ня! ☺️\nРепутация повышена!", from_username, to_username)
         if (message == "-"):
             current_rep = int_from_db_answer(str(SQLighter.get_rep(db, to_user, chat_id)[0]))
             SQLighter.change_rep(db, to_user, chat_id, current_rep - 1)
-            answer = str.format("@{} обзывает \"бакой\" @{}.\nРепутация снижена!", from_username, to_username)
+            answer = str.format("@{} обзывает \"бакой\" @{}. 😡\nРепутация снижена!", from_username, to_username)
     else:
-        username = str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0])
-        answer = str.format("@{}, пытаешься сжульничать? Баааака! Кусь тебя! >.<\nРепутация снижена!", username)
-        current_rep = int_from_db_answer(str(SQLighter.get_rep(db, from_user, chat_id)[0]))
-        SQLighter.change_rep(db, from_user, chat_id, current_rep - 1)
+        if (message == "+"):
+            username = str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0])
+            answer = str.format("@{}, пытаешься сжульничать? Баааака! Кусь тебя! 😈\nРепутация снижена!", username)
+            current_rep = int_from_db_answer(str(SQLighter.get_rep(db, from_user, chat_id)[0]))
+            SQLighter.change_rep(db, from_user, chat_id, current_rep - 1)
+        if (message == "-"):
+            username = str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0])
+            answer = str.format("@{}, да ты, погляжу, М-тип? Мне нравится, продолжай. 😏\nРепутация снижена!", username)
+            current_rep = int_from_db_answer(str(SQLighter.get_rep(db, from_user, chat_id)[0]))
+            SQLighter.change_rep(db, from_user, chat_id, current_rep - 1)
     return answer
 
 def get_all_conferences():
