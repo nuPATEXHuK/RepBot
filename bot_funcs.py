@@ -14,13 +14,15 @@ def get_key_by_value(value_list, value):
             key = current_key
     return key
 
+# Функция для преобразования ответа от БД в число.
 def int_from_db_answer(db_answer):
     return int(db_answer.replace("(", "").replace(")", "").replace(",", ""))
 
+# Функция для преобразования ответа от БД в строку.
 def str_from_db_answer(db_answer):
     return str(db_answer).replace("(", "").replace(")", "").replace(",", "").replace("'", "")
 
-# Проверка строки на повышение или понижение репутации
+# Проверка строки на повышение или понижение репутации.
 def change_rep(chat_id, message, from_user, to_user):
     answer = ""
     if (from_user != to_user):
@@ -50,19 +52,26 @@ def change_rep(chat_id, message, from_user, to_user):
 def get_all_conferences():
     return ""
 
+# Обновление статистики (добавление сообщений/активности).
 def add_message_stat(chat_id, from_user, username, char_count):
     if (SQLighter.get_username_by_id(db, from_user) == []):
-        SQLighter.add_new_user(db, from_user, username, chat_id)
+        SQLighter.add_new_user(db, from_user, username)
+        SQLighter.add_new_stat(db, from_user, chat_id)
+    if (SQLighter.check_chat_id(db, from_user, chat_id) == []):
+        SQLighter.add_new_stat(db, from_user, chat_id)
     current_messages_count = int_from_db_answer(str(SQLighter.get_message_count_stat(db, from_user, chat_id)[0]))
     current_char_count = int_from_db_answer(str(SQLighter.get_char_count_stat(db, from_user, chat_id)[0]))
     
     SQLighter.add_message_stat(db, current_messages_count + 1, current_char_count + char_count, chat_id, from_user)
 
-# Формирование справки.
+def get_user_activity(user_id, chat_id):
+    return 100
+
+# Формирование статуса.
 def status_by_user(user_id, chat_id):
     line = "_____________________"
     name = "Имя: {}".format(str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]))
-    activity = "Активность: {}".format("[в разработке]")
+    activity = "Активность: {}%".format(get_user_activity(user_id, chat_id))
     messages = "Сообщений: {}".format(int_from_db_answer(str(SQLighter.get_message_count_stat(db, user_id, chat_id)[0])))
     top = "Место в топе: {}".format("[в разработке]")
     rep = "Репутация: {}".format(int_from_db_answer(str(SQLighter.get_rep(db, user_id, chat_id)[0])))

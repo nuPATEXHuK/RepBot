@@ -25,10 +25,18 @@ class SQLighter:
     def get_username_by_id(self, user_id):
         with self.connection:
             return self.cursor.execute("SELECT username FROM users_info WHERE user_id={}".format(user_id)).fetchall()
+    
+    def check_chat_id(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT messages_count FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
 
-    def add_new_user(self, user_id, username, chat_id):
+    def add_new_user(self, user_id, username):
         with self.connection:
             self.cursor.execute("INSERT INTO users_info (user_id, username) VALUES ({}, '{}')".format(user_id, username)).fetchall()
+            
+    
+    def add_new_stat(self, user_id, chat_id):
+        with self.connection:
             self.cursor.execute("INSERT INTO users_stat (user_id, chat_id) VALUES ({}, {})".format(user_id, chat_id)).fetchall()
 
     # 

@@ -32,14 +32,15 @@ async def rep_change(message: types.Message):
         if (message.from_user.id != bot.id):
             f.add_message_stat(message.chat.id, message.from_user.id, message.from_user.username, len(message.text.replace(" ", "")))
         if (message.reply_to_message != None):
-            answer = f.change_rep(message.chat.id, message.text, message.from_user.id, message.reply_to_message.from_user.id)
-            if (answer != ""):
-                await message.answer(answer)
-                await asyncio.sleep(30)
-                # Опасное место, надо повесить сюда try
-                await bot.delete_message(message.chat.id, message.message_id + 1)
+            if (message.text == "+" or message.text == "-"):
+                answer = f.change_rep(message.chat.id, message.text, message.from_user.id, message.reply_to_message.from_user.id)
+                if (answer != ""):
+                    await message.answer(answer)
+                    await asyncio.sleep(30)
+                    # Опасное место, надо повесить сюда try
+                    await bot.delete_message(message.chat.id, message.message_id + 1)
 
-# Функция (шедулер) для ежедневной отправки статуса по активным релизам. Активна постоянно, проверятся раз в секунду.
+# Функция (шедулер) для ежедневной отправки топа участников. Активна постоянно, проверятся раз в секунду.
 async def scheduler(wait_for):
     while True:
         await asyncio.sleep(wait_for)
