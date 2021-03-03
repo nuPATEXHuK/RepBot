@@ -13,6 +13,7 @@ token = cl.get_token()
 bot = Bot(token)
 dp = Dispatcher(bot)
 
+errorMessage = "Кажется, что-то пошло не так. Пожалуйста, сообщите администратору бота об этом случае."
 
 # Запускается при первом запуске бота в ЛС.
 @dp.message_handler(commands=["start"])
@@ -23,11 +24,21 @@ async def start(message: types.Message):
 async def status(message: types.Message):
     await message.answer(f.status_by_user(message.from_user.id, message.chat.id))
     await asyncio.sleep(60)
-    # Опасное место, надо повесить сюда try
-    await bot.delete_message(message.chat.id, message.message_id + 1)
+    try:
+        await bot.delete_message(message.chat.id, message.message_id)
+        await bot.delete_message(message.chat.id, message.message_id + 1)
+    except:
+        await message.answer(errorMessage)
 
+'''
+@dp.message_handler(commands=["restore_rep"])
+async def restore_rep(message: types.Message):
+    f.restore_free_rep()
+'''
+
+# Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])
-async def rep_change(message: types.Message):
+async def message_listener(message: types.Message):
     if (message.chat.id < 0):
         if (message.from_user.id != bot.id):
             f.add_message_stat(message.chat.id, message.from_user.id, message.from_user.username, len(message.text.replace(" ", "")))
@@ -37,18 +48,21 @@ async def rep_change(message: types.Message):
                 if (answer != ""):
                     await message.answer(answer)
                     await asyncio.sleep(30)
-                    # Опасное место, надо повесить сюда try
-                    await bot.delete_message(message.chat.id, message.message_id + 1)
+                    try:
+                        await bot.delete_message(message.chat.id, message.message_id + 1)
+                    except:
+                        await message.answer(errorMessage)
 
 # Функция (шедулер) для ежедневной отправки топа участников. Активна постоянно, проверятся раз в секунду.
 async def scheduler(wait_for):
     while True:
         await asyncio.sleep(wait_for)
         now = datetime.strftime(datetime.now(pytz.timezone('Europe/Moscow')), "%X")
-        #if (now == "00:00:00"):
-        #    activeConferences = f.get_all_conferences()
-        #    for Conference in activeConferences:
-        #        await bot.send_message(activeReleases[Conference], f.get_top_rep_list(), disable_notification=True)
+        if (now == "00:00:00"):
+            f.restore_free_rep()
+            #activeConferences = f.get_all_conferences()
+            #for Conference in activeConferences:
+            #    await bot.send_message(activeReleases[Conference], f.get_top_rep_list(), disable_notification=True)
 
 # Стартовая функция для запуска бота.
 if __name__ == "__main__":

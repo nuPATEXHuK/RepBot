@@ -8,19 +8,39 @@ class SQLighter:
         self.cursor = self.connection.cursor()
     
     # 
-    def get_all_conferences(self, active=True, all_releases=False):
+    def get_users_list(self):
         with self.connection:
-            return self.cursor.execute("SELECT release_short_name FROM releases{}".format(additional_info)).fetchall()
+            return self.cursor.execute("SELECT user_id FROM users_stat").fetchall()
 
     def get_rep(self, to_user, chat_id):
         with self.connection:
             return self.cursor.execute("SELECT reputation FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
+
+    def get_free_rep(self, to_user, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT free_rep FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
+
+    def get_all_activity(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT char_count FROM users_stat WHERE chat_id={}".format(chat_id)).fetchall()
+    
+    def get_user_activity(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT char_count FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
 
     # Изменение репутации
     def change_rep(self, to_user, chat_id, rep):
         with self.connection:
             current_rep = self.cursor.execute("UPDATE users_stat SET reputation = {} WHERE user_id={} AND chat_id={}".format(rep, to_user, chat_id)).fetchall()
 
+    def change_free_rep(self, to_user, chat_id, free_rep):
+        with self.connection:
+            current_rep = self.cursor.execute("UPDATE users_stat SET free_rep = {} WHERE user_id={} AND chat_id={}".format(free_rep, to_user, chat_id)).fetchall()
+    
+    def restore_free_rep(self, to_user):
+        with self.connection:
+            current_rep = self.cursor.execute("UPDATE users_stat SET free_rep = 10 WHERE user_id={}".format(to_user)).fetchall()
+    
     # 
     def get_username_by_id(self, user_id):
         with self.connection:
