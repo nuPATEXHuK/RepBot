@@ -46,11 +46,7 @@ async def set_title(message: types.Message):
                 if (answer != ""):
                     error = False
         if (error):
-            try:
-                await bot.delete_message(message.chat.id, message.message_id)
-                await bot.delete_message(message.chat.id, message.message_id + 1)
-            except:
-                await message.answer(errorMessage)
+            await message.answer(userErrorMessage)
         else:
             await message.answer(answer)
 

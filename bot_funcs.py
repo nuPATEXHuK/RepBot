@@ -13,6 +13,8 @@ def get_user_title(user_id, chat_id):
 def check_and_get_username(username):
     if (username[0] == '@'):
         return username[1:]
+    else:
+        return username
 
 def set_user_title(from_user, chat_id, parameters):
     admin = int_from_db_answer(SQLighter.check_is_admin(db, from_user, chat_id)[0])
@@ -22,11 +24,12 @@ def set_user_title(from_user, chat_id, parameters):
     username = check_and_get_username(parameters[0])
     user_id = int_from_db_answer(SQLighter.get_id_by_username(db, username)[0])
     # TODO: проверить правильность титула (отсутсвие спецсимволов)
-    if (user_id == 0):
-        return "Сожалею, но я не знаю сударя {}. Возможно, вы имели в виду кого-то другого?".format(username)
     title = parameters[1]
-    SQLighter.set_user_title(db, title, user_id, chat_id)
-    return "Правом, данным мне свыше моим разработчиком, нарекаю сударя {} званием {}! Прими мои поздравления!".format(username, title)
+    if (user_id == 0 or SQLighter.check_chat_id(db, user_id, chat_id) == []):
+        return "Сожалею, но я не знаю сударя {}. Возможно, вы имели в виду кого-то другого?".format(username)
+    else:
+        SQLighter.set_user_title(db, title, user_id, chat_id)
+        return "Правом, данным мне свыше моим разработчиком, нарекаю сударя {} званием {}! Прими мои поздравления!".format(username, title)
 
 # Функция для преобразования ответа от БД в число.
 def int_from_db_answer(db_answer):
