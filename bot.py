@@ -14,6 +14,7 @@ bot = Bot(token)
 dp = Dispatcher(bot)
 
 errorMessage = "Кажется, что-то пошло не так. Пожалуйста, сообщите администратору бота об этом случае."
+userErrorMessage = "Параметры заполнены неверно. Повторите попытку."
 
 # Запускается при первом запуске бота в ЛС.
 @dp.message_handler(commands=["start"])
@@ -30,11 +31,28 @@ async def status(message: types.Message):
     except:
         await message.answer(errorMessage)
 
-'''
-@dp.message_handler(commands=["restore_rep"])
-async def restore_rep(message: types.Message):
-    f.restore_free_rep()
-'''
+@dp.message_handler(commands=["assign_user_title"])
+async def set_title(message: types.Message):
+    if (int(message.chat.id) < 0):
+        answer = userErrorMessage
+        error = True
+        parameters = message.text.replace("/assign_user_title", '').replace("@AppleBunBot", "").strip().split(" ")
+        if (len(parameters) >= 2):
+                i = 2
+                while (i < len(parameters)):
+                    parameters[1] += " {}".format(parameters[i])
+                    i += 1
+                answer = f.set_user_title(message.from_user.id, message.chat.id, parameters)
+                if (answer != ""):
+                    error = False
+        if (error):
+            try:
+                await bot.delete_message(message.chat.id, message.message_id)
+                await bot.delete_message(message.chat.id, message.message_id + 1)
+            except:
+                await message.answer(errorMessage)
+        else:
+            await message.answer(answer)
 
 # Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])
@@ -43,7 +61,7 @@ async def message_listener(message: types.Message):
         if (message.from_user.id != bot.id):
             f.add_message_stat(message.chat.id, message.from_user.id, message.from_user.username, len(message.text.replace(" ", "")))
         if (message.reply_to_message != None):
-            if (message.text == "+" or message.text == "-"):
+            if ((message.text == "+" or message.text == "-") and message.reply_to_message.from_user.id != bot.id):
                 answer = f.change_rep(message.chat.id, message.text, message.from_user.id, message.reply_to_message.from_user.id)
                 if (answer != ""):
                     await message.answer(answer)

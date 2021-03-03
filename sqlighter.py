@@ -45,6 +45,10 @@ class SQLighter:
     def get_username_by_id(self, user_id):
         with self.connection:
             return self.cursor.execute("SELECT username FROM users_info WHERE user_id={}".format(user_id)).fetchall()
+
+    def get_id_by_username(self, username):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_info WHERE username='{}'".format(username)).fetchall()
     
     def check_chat_id(self, user_id, chat_id):
         with self.connection:
@@ -66,13 +70,23 @@ class SQLighter:
     
     def get_message_count_stat(self, user_id, chat_id):
         with self.connection:
-            #print("SELECT messages_count FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id))
             return self.cursor.execute("SELECT messages_count FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
     
     def get_char_count_stat(self, user_id, chat_id):
         with self.connection:
-            #print("SELECT char_count FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id))
             return self.cursor.execute("SELECT char_count FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+
+    def check_is_admin(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT admin FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+
+    def get_user_title(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT title FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+    
+    def set_user_title(self, title, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("UPDATE users_stat SET title='{}' WHERE user_id={} AND chat_id={}".format(title, user_id, chat_id)).fetchall()
 
     # Закрытие подключения к БД
     def close(self):
