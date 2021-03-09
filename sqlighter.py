@@ -16,10 +16,6 @@ class SQLighter:
         with self.connection:
             return self.cursor.execute("SELECT reputation FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
 
-    def get_free_rep(self, to_user, chat_id):
-        with self.connection:
-            return self.cursor.execute("SELECT free_rep FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
-
     def get_all_activity(self, chat_id):
         with self.connection:
             return self.cursor.execute("SELECT char_count FROM users_stat WHERE chat_id={}".format(chat_id)).fetchall()
@@ -31,16 +27,24 @@ class SQLighter:
     # Изменение репутации
     def change_rep(self, to_user, chat_id, rep):
         with self.connection:
-            current_rep = self.cursor.execute("UPDATE users_stat SET reputation = {} WHERE user_id={} AND chat_id={}".format(rep, to_user, chat_id)).fetchall()
+            self.cursor.execute("UPDATE users_stat SET reputation = {} WHERE user_id={} AND chat_id={}".format(rep, to_user, chat_id)).fetchall()
 
     def change_free_rep(self, to_user, chat_id, free_rep):
         with self.connection:
-            current_rep = self.cursor.execute("UPDATE users_stat SET free_rep = {} WHERE user_id={} AND chat_id={}".format(free_rep, to_user, chat_id)).fetchall()
+            self.cursor.execute("UPDATE users_stat SET free_rep = {} WHERE user_id={} AND chat_id={}".format(free_rep, to_user, chat_id)).fetchall()
     
-    def restore_free_rep(self, to_user):
+    def restore_free_rep(self, to_user, free_rep):
         with self.connection:
-            current_rep = self.cursor.execute("UPDATE users_stat SET free_rep = 10 WHERE user_id={}".format(to_user)).fetchall()
+            self.cursor.execute("UPDATE users_stat SET free_rep = {} WHERE user_id={}".format(free_rep, to_user)).fetchall()
     
+    def restore_free_rep_for_user(self, user_id, chat_id, free_rep):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET free_rep = {} WHERE user_id={} AND chat_id={}".format(free_rep, user_id, chat_id)).fetchall()
+    
+    def get_free_rep(self, to_user, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT free_rep FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
+
     # 
     def get_username_by_id(self, user_id):
         with self.connection:
@@ -86,7 +90,23 @@ class SQLighter:
     
     def set_user_title(self, title, user_id, chat_id):
         with self.connection:
-            return self.cursor.execute("UPDATE users_stat SET title='{}' WHERE user_id={} AND chat_id={}".format(title, user_id, chat_id)).fetchall()
+            self.cursor.execute("UPDATE users_stat SET title='{}' WHERE user_id={} AND chat_id={}".format(title, user_id, chat_id)).fetchall()
+
+    def get_top_message_list(self, chat_id, count):
+        with self.connection:
+            if (int(count) > 0):
+                count = " LIMIT {}".format(count)
+                return self.cursor.execute("SELECT user_id, messages_count FROM users_stat WHERE chat_id={} ORDER BY messages_count DESC{};".format(chat_id, count)).fetchall()
+            else:
+                return self.cursor.execute("SELECT user_id, messages_count FROM users_stat WHERE chat_id={} ORDER BY messages_count DESC;".format(chat_id)).fetchall()
+
+    def get_top_rep_list(self, chat_id, count):
+        with self.connection:
+            if (int(count) > 0):
+                count = " LIMIT {}".format(count)
+                return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY reputation DESC{};".format(chat_id, count)).fetchall()
+            else:
+                return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY reputation DESC;".format(chat_id)).fetchall()
 
     # Закрытие подключения к БД
     def close(self):

@@ -21,22 +21,83 @@ userErrorMessage = "Параметры заполнены неверно. Пов
 async def start(message: types.Message):
     await message.answer("Привет, " + message.from_user.username + ".")
 
+@dp.message_handler(commands=["add_free_rep"])
+async def add_free_rep_for_user(message: types.Message):
+    if (message.chat.id < 0):
+        answer = userErrorMessage
+        error = True
+        parameters = message.text.replace("/add_free_rep", "").replace("@AppleBunBot", "").strip().split(" ")
+        if (len(parameters) == 2):
+            answer = f.restore_free_rep_for_user(message.from_user.id, parameters[0], message.chat.id, parameters[1])
+            error = False
+        if (error):
+            await message.answer(userErrorMessage)
+        else:
+            await message.answer(answer)
+
+@dp.message_handler(commands=["top_message"])
+async def top_message(message: types.Message):
+    if (message.chat.id < 0):
+        count = message.text.replace("/top_message", "").replace("@AppleBunBot", "").strip().split(" ")
+        answer = f.get_top_message(message.from_user.id, message.chat.id, count[0])
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["top_rep"])
+async def top_rep(message: types.Message):
+    if (message.chat.id < 0):
+        count = message.text.replace("/top_rep", "").replace("@AppleBunBot", "").strip().split(" ")
+        answer = f.get_top_rep(message.from_user.id, message.chat.id, count[0])
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["top_my"])
+async def top_message(message: types.Message):
+    if (message.chat.id < 0):
+        answer = f.get_my_top(message.from_user.id, message.from_user.username, message.chat.id)
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["top_activity"])
+async def top_activity(message: types.Message):
+    await message.answer("Привет, " + message.from_user.username + ".")
+
 @dp.message_handler(commands=["stat"])
 async def status(message: types.Message):
-    await message.answer(f.status_by_user(message.from_user.id, message.chat.id))
-    await asyncio.sleep(60)
-    try:
-        await bot.delete_message(message.chat.id, message.message_id)
-        await bot.delete_message(message.chat.id, message.message_id + 1)
-    except:
-        await message.answer(errorMessage)
+    if (message.chat.id < 0):
+        await message.answer(f.status_by_user(message.from_user.id, message.chat.id))
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
 
-@dp.message_handler(commands=["assign_user_title"])
+@dp.message_handler(commands=["help"])
+async def start(message: types.Message):
+    await message.answer("Тут будет список команд.")
+
+@dp.message_handler(commands=["assign_title"])
 async def set_title(message: types.Message):
     if (int(message.chat.id) < 0):
         answer = userErrorMessage
         error = True
-        parameters = message.text.replace("/assign_user_title", '').replace("@AppleBunBot", "").strip().split(" ")
+        parameters = message.text.replace("/assign_title", "").replace("@AppleBunBot", "").strip().split(" ")
         if (len(parameters) >= 2):
                 i = 2
                 while (i < len(parameters)):
@@ -76,7 +137,8 @@ async def scheduler(wait_for):
             f.restore_free_rep()
             #activeConferences = f.get_all_conferences()
             #for Conference in activeConferences:
-            #    await bot.send_message(activeReleases[Conference], f.get_top_rep_list(), disable_notification=True)
+                
+                #await bot.send_message(activeReleases[Conference], f.get_top_rep_list(), disable_notification=True)
 
 # Стартовая функция для запуска бота.
 if __name__ == "__main__":
