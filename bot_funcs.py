@@ -18,11 +18,18 @@ def check_and_get_username(username):
     else:
         return username
 
-def set_user_title(from_user, chat_id, parameters):
-    admin = int_from_db_answer(SQLighter.check_is_admin(db, from_user, chat_id)[0])
+def check_is_admin(user_id, chat_id):
+    admin = int_from_db_answer(SQLighter.check_is_admin(db, user_id, chat_id)[0])
     if (admin == 0):
-        user_title = get_user_title(from_user, chat_id)
-        return "{} {}, у вас недостаточно прав для выполнения этой команды.".format(user_title, str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0]))
+        user_title = get_user_title(user_id, chat_id)
+        return "{} {}, у вас недостаточно прав для выполнения этой команды.".format(user_title, str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]))
+    else:
+        return ""
+
+def set_user_title(from_user, chat_id, parameters):
+    check_admin = check_is_admin(from_user, chat_id)
+    if (check_admin != ""):
+        return check_admin
     username = check_and_get_username(parameters[0])
     user_id = int_from_db_answer(SQLighter.get_id_by_username(db, username)[0])
     # TODO: проверить правильность титула (отсутсвие спецсимволов)
@@ -93,10 +100,9 @@ def restore_free_rep():
         SQLighter.restore_free_rep(db, user_id, 10)
 
 def restore_free_rep_for_user(from_user, to_user, chat_id, free_rep):
-    admin = int_from_db_answer(SQLighter.check_is_admin(db, from_user, chat_id)[0])
-    if (admin == 0):
-        user_title = get_user_title(from_user, chat_id).title()
-        return "{} {}, у вас недостаточно прав для выполнения этой команды.".format(user_title, str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0]))
+    check_admin = check_is_admin(from_user, chat_id)
+    if (check_admin != ""):
+        return check_admin
     try:
         free_rep = int(free_rep)
     except:
@@ -150,11 +156,9 @@ def get_my_top(user_id, username, chat_id):
     return answer
 
 def get_top_message(user_id, chat_id, count):
-    admin = int_from_db_answer(SQLighter.check_is_admin(db, user_id, chat_id)[0])
-    may_be_user = ""
-    if (admin == 0):
-        user_title = get_user_title(user_id, chat_id).title()
-        return "{} {}, у вас недостаточно прав для выполнения этой команды.".format(user_title, str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]))
+    check_admin = check_is_admin(user_id, chat_id)
+    if (check_admin != ""):
+        return check_admin
     try:
         count = int(count)
     except:
@@ -185,11 +189,9 @@ def get_top_message(user_id, chat_id, count):
         return get_user_top_message(to_user, chat_id, False)
 
 def get_top_rep(user_id, chat_id, count):
-    admin = int_from_db_answer(SQLighter.check_is_admin(db, user_id, chat_id)[0])
-    may_be_user = ""
-    if (admin == 0):
-        user_title = get_user_title(user_id, chat_id).title()
-        return "{} {}, у вас недостаточно прав для выполнения этой команды.".format(user_title, str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]))
+    check_admin = check_is_admin(user_id, chat_id)
+    if (check_admin != ""):
+        return check_admin
     try:
         count = int(count)
     except:
@@ -229,7 +231,7 @@ def get_user_top_message(user_id, chat_id, my_stat):
         for top_user in top_msg_list:
             user_and_msg = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_msg[0])):
-                answer = "Сообщений: {}\nРанг в топе по сообщениям: {}\n\n".format(user_msg, i)
+                answer = "Сообщений: {}\nРанг в топе по сообщениям: {}\n".format(user_msg, i)
             i += 1
     else:
         for top_user in top_msg_list:
@@ -249,13 +251,13 @@ def get_user_top_rep(user_id, chat_id, my_stat):
         for top_user in top_rep_list:
             user_and_rep = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_rep[0])):
-                answer = "Репутация: {}\nРанг в топе по репутации: {}\n\n".format(user_rep, i)
+                answer = "Репутация: {}\nРанг в топе по репутации: {}\n".format(user_rep, i)
             i += 1
     else:
         for top_user in top_rep_list:
             user_and_rep = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_rep[0])):
-                answer = "{} {}.\Репутация: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_rep, i)
+                answer = "{} {}.\nРепутация: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_rep, i)
             i += 1
     return answer
 
@@ -270,14 +272,28 @@ def status_by_user(user_id, chat_id):
     result_text += title + CR
     activity = "Активность: {}%".format(get_user_activity(user_id, chat_id))
     result_text += activity + CR
-    messages = "Сообщений: {}".format(int_from_db_answer(SQLighter.get_message_count_stat(db, user_id, chat_id)[0]))
-    result_text += messages + CR
-    top = "Место в топе: {}".format("[в разработке]")
-    result_text += top + CR
-    rep = "Репутация: {}".format(int_from_db_answer(SQLighter.get_rep(db, user_id, chat_id)[0]))
-    result_text += rep + CR
+    messages = get_user_top_message(user_id, chat_id, True)
+    result_text += messages
+    rep = get_user_top_rep(user_id, chat_id, True)
+    result_text += rep
     free_rep = "Свободных очков репутации: {}".format(int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0]))
     result_text += free_rep + CR
     
     status = result_text + line
     return status
+
+def get_help(user_id, chat_id):
+    admin = True
+    check_admin = check_is_admin(user_id, chat_id)
+    if (check_admin != ""):
+        admin = False
+    command_list = "Список доступных команд:\n"
+    command_list += "● /top_my - вызов своей статистики только по топам\n"
+    command_list += "● /stat - вызов своей общей статистики\n"
+    command_list += "● \"+\" или \"-\" в ответ на сообщение другого пользователя - изменение репутации пользователя"
+    if (admin):
+        command_list += "\n● /add_free_rep [username] [count] - добавить свободные очки репутации (count) пользователю (username)\n"
+        command_list += "● /top_message [username / count] - вызов топа по сообщениям у конкретного пользователя (username) или по количеству (count)\n"
+        command_list += "● /top_rep [username / count] - вызов топа по репутации у конкретного пользователя (username) или по количеству (count)\n"
+        command_list += "● /assign_title [username] [title] - добавить титул (title) пользователю (username)"
+    return command_list

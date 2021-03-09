@@ -73,10 +73,6 @@ async def top_message(message: types.Message):
         except:
             await message.answer(errorMessage)
 
-@dp.message_handler(commands=["top_activity"])
-async def top_activity(message: types.Message):
-    await message.answer("Привет, " + message.from_user.username + ".")
-
 @dp.message_handler(commands=["stat"])
 async def status(message: types.Message):
     if (message.chat.id < 0):
@@ -90,7 +86,13 @@ async def status(message: types.Message):
 
 @dp.message_handler(commands=["help"])
 async def start(message: types.Message):
-    await message.answer("Тут будет список команд.")
+    await message.answer(f.get_help(message.from_user.id, message.chat.id))
+    await asyncio.sleep(30)
+    try:
+        await bot.delete_message(message.chat.id, message.message_id)
+        await bot.delete_message(message.chat.id, message.message_id + 1)
+    except:
+        await message.answer(errorMessage)
 
 @dp.message_handler(commands=["assign_title"])
 async def set_title(message: types.Message):
