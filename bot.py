@@ -62,7 +62,7 @@ async def top_rep(message: types.Message):
             await message.answer(errorMessage)
 
 @dp.message_handler(commands=["top_my"])
-async def top_message(message: types.Message):
+async def top_my(message: types.Message):
     if (message.chat.id < 0):
         answer = f.get_my_top(message.from_user.id, message.from_user.username, message.chat.id)
         await message.answer(answer)
@@ -77,6 +77,28 @@ async def top_message(message: types.Message):
 async def status(message: types.Message):
     if (message.chat.id < 0):
         await message.answer(f.status_by_user(message.from_user.id, message.chat.id))
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["main_pos"])
+async def main_pos(message: types.Message):
+    if (message.chat.id < 0):
+        await message.answer(f.get_main_pos(message.chat.id))
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["main_neg"])
+async def main_neg(message: types.Message):
+    if (message.chat.id < 0):
+        await message.answer(f.get_main_neg(message.chat.id))
         await asyncio.sleep(60)
         try:
             await bot.delete_message(message.chat.id, message.message_id)
@@ -124,7 +146,7 @@ async def message_listener(message: types.Message):
                 answer = f.change_rep(message.chat.id, message.text, message.from_user.id, message.reply_to_message.from_user.id)
                 if (answer != ""):
                     await message.answer(answer)
-                    await asyncio.sleep(30)
+                    await asyncio.sleep(3600)
                     try:
                         await bot.delete_message(message.chat.id, message.message_id + 1)
                     except:
@@ -136,11 +158,7 @@ async def scheduler(wait_for):
         await asyncio.sleep(wait_for)
         now = datetime.strftime(datetime.now(pytz.timezone('Europe/Moscow')), "%X")
         if (now == "00:00:00"):
-            f.restore_free_rep()
-            #activeConferences = f.get_all_conferences()
-            #for Conference in activeConferences:
-                
-                #await bot.send_message(activeReleases[Conference], f.get_top_rep_list(), disable_notification=True)
+            f.restore_standard_rep()
 
 # Стартовая функция для запуска бота.
 if __name__ == "__main__":

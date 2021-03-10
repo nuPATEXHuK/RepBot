@@ -45,6 +45,34 @@ class SQLighter:
         with self.connection:
             return self.cursor.execute("SELECT free_rep FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
 
+    def get_rep_pos_offset(self, to_user, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT rep_offset_pos FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
+    
+    def get_user_id_by_top_rep_pos_offset(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE chat_id={} ORDER BY rep_offset_pos DESC LIMIT 1;".format(chat_id)).fetchall()
+    
+    def get_rep_neg_offset(self, to_user, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT rep_offset_neg FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
+    
+    def get_user_id_by_top_rep_neg_offset(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE chat_id={} ORDER BY rep_offset_neg DESC LIMIT 1;".format(chat_id)).fetchall()
+    
+    def change_pos_rep(self, to_user, chat_id, rep_pos_offset):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET rep_offset_pos = {} WHERE user_id={} AND chat_id={}".format(rep_pos_offset, to_user, chat_id)).fetchall()
+    
+    def change_neg_rep(self, to_user, chat_id, rep_neg_offset):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET rep_offset_neg = {} WHERE user_id={} AND chat_id={}".format(rep_neg_offset, to_user, chat_id)).fetchall()
+
+    def restore_neg_and_pos_rep(self, to_user):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET rep_offset_pos = 0, rep_offset_neg = 0 WHERE user_id={}".format(to_user)).fetchall()
+
     # 
     def get_username_by_id(self, user_id):
         with self.connection:
