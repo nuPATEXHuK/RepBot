@@ -136,6 +136,34 @@ class SQLighter:
             else:
                 return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY reputation DESC;".format(chat_id)).fetchall()
 
+    def zero_free_roulette(self, user_id, chat_id):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET roulette=0 WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+    
+    def get_free_roulette(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT roulette FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+    
+    def restore_free_roulette(self, user_id):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET roulette = 1 WHERE user_id={}".format(user_id)).fetchall()
+    
+    def change_roulette_win(self, user_id, chat_id, wins):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET roulette_win={} WHERE user_id={} AND chat_id={}".format(wins, user_id, chat_id)).fetchall()
+    
+    def get_roulette_win(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT roulette_win FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+    
+    def change_roulette_lose(self, user_id, chat_id, loses):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET roulette_lose={} WHERE user_id={} AND chat_id={}".format(loses, user_id, chat_id)).fetchall()
+    
+    def get_roulette_lose(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT roulette_lose FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+
     # Закрытие подключения к БД
     def close(self):
         self.connection.close()

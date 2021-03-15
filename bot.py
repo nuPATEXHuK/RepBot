@@ -21,6 +21,34 @@ userErrorMessage = "Параметры заполнены неверно. Пов
 async def start(message: types.Message):
     await message.answer("Привет, " + message.from_user.username + ".")
 
+@dp.message_handler(commands=["fight"])
+async def fight(message: types.Message):
+    if (message.chat.id < 0):
+        answer = userErrorMessage
+        error = True
+        parameter = message.text.replace("/fight", "").replace("@AppleBunBot", "").strip()
+        answer = f.fight_with_player(message.from_user.id, parameter, message.chat.id)
+        if (answer != ""):
+            error = False
+        if (error):
+            await message.answer(userErrorMessage)
+        else:
+            await message.answer(answer)
+
+@dp.message_handler(commands=["roulette"])
+async def roulette(message: types.Message):
+    if (message.chat.id < 0):
+        answer = userErrorMessage
+        error = True
+        parameter = message.text.replace("/roulette", "").replace("@AppleBunBot", "").strip()
+        answer = f.roulette(message.from_user.id, message.chat.id, parameter)
+        if (answer != ""):
+            error = False
+        if (error):
+            await message.answer(userErrorMessage)
+        else:
+            await message.answer(answer)
+
 @dp.message_handler(commands=["add_free_rep"])
 async def add_free_rep_for_user(message: types.Message):
     if (message.chat.id < 0):
@@ -88,33 +116,24 @@ async def status(message: types.Message):
 async def main_pos(message: types.Message):
     if (message.chat.id < 0):
         await message.answer(f.get_main_pos(message.chat.id))
-        await asyncio.sleep(60)
-        try:
-            await bot.delete_message(message.chat.id, message.message_id)
-            await bot.delete_message(message.chat.id, message.message_id + 1)
-        except:
-            await message.answer(errorMessage)
 
 @dp.message_handler(commands=["main_neg"])
 async def main_neg(message: types.Message):
     if (message.chat.id < 0):
         await message.answer(f.get_main_neg(message.chat.id))
+
+@dp.message_handler(commands=["help"])
+async def start(message: types.Message):
+    if (message.chat.id < 0):
+        await message.answer(f.get_help(message.from_user.id, message.chat.id))
         await asyncio.sleep(60)
         try:
             await bot.delete_message(message.chat.id, message.message_id)
             await bot.delete_message(message.chat.id, message.message_id + 1)
         except:
             await message.answer(errorMessage)
-
-@dp.message_handler(commands=["help"])
-async def start(message: types.Message):
-    await message.answer(f.get_help(message.from_user.id, message.chat.id))
-    await asyncio.sleep(30)
-    try:
-        await bot.delete_message(message.chat.id, message.message_id)
-        await bot.delete_message(message.chat.id, message.message_id + 1)
-    except:
-        await message.answer(errorMessage)
+    else:
+        await message.answer(f.get_help_PM())
 
 @dp.message_handler(commands=["assign_title"])
 async def set_title(message: types.Message):
@@ -158,7 +177,7 @@ async def scheduler(wait_for):
         await asyncio.sleep(wait_for)
         now = datetime.strftime(datetime.now(pytz.timezone('Europe/Moscow')), "%X")
         if (now == "00:00:00"):
-            f.restore_standard_rep()
+            f.restore_standard_daily_params()
 
 # Стартовая функция для запуска бота.
 if __name__ == "__main__":

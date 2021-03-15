@@ -1,5 +1,6 @@
 from sqlighter import SQLighter
 import config_loader as cl
+import dialogs
 
 db = SQLighter(cl.get_DB())
 
@@ -94,15 +95,80 @@ def change_rep(chat_id, message, from_user, to_user):
             current_rep = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
     return answer
 
-def get_all_conferences():
-    return ""
+def fight_with_player(from_user, to_user, chat_id):
+    free_rep = int_from_db_answer(SQLighter.get_free_rep(db, from_user, chat_id)[0])
+    if (free_rep < 2):
+        return "Не хватает доступных очков репутации!\nНужно очков: 2\nДоступно очков: {}".format(free_rep)
+    to_username = check_and_get_username(to_user)
+    to_user_id = int_from_db_answer(SQLighter.get_id_by_username(db, to_username)[0])
+    from_username = str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0])
+    from_username_title = get_user_title(from_user, chat_id).title()
+    to_username_title = get_user_title(to_user_id, chat_id)
+    answer = "Внимание, зафиксирован бросок кубика!\nРезультат броска: "
+    if (from_user != to_user_id):
+        i = dialogs.get_random_int(1, 6)
+        SQLighter.change_free_rep(db, from_user, chat_id, free_rep - 2)
+        rep_offset = 1
+        if (i < 4):
+            lose = "Неудача!"
+            if (i == 1):
+                rep_offset = 2
+                lose = "Критическая неудача!"
+            current_rep = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
+            SQLighter.change_rep(db, from_user, chat_id, current_rep - 1 * rep_offset)
+            
+            answer += "{} из 6. {}\n\n{} {} {} Репутация снижена и составляет сейчас {}.".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_rep - 1)
+        else:
+            win = "Удача!"
+            if (i == 6):
+                rep_offset = 2
+                win = "Критическая удача!"
+            current_rep_from = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
+            current_rep_to = int_from_db_answer(SQLighter.get_rep(db, to_user_id, chat_id)[0])
+            SQLighter.change_rep(db, from_user, chat_id, current_rep_from + 1 * rep_offset)
+            SQLighter.change_rep(db, to_user_id, chat_id, current_rep_to - 1 * rep_offset)
+            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nРепутация нападающего: {}\nРепутация жертвы: {}".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_rep_from + 1, current_rep_to - 1)
+    else:
+        answer = "{} {} {}".format(from_username_title, from_username, dialogs.get_fight_against_yourself_dialog())
+    return answer
 
-def restore_standard_rep():
+def roulette(user_id, chat_id, bullets):
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+    username_title = get_user_title(user_id, chat_id)
+    try:
+        bullets = int(bullets)
+    except:
+        return ""
+    if (bullets < 1 or bullets > 5):
+        return "Не удалось зарядить револьвер. Попробуйте ещё раз, указав правильное количество пуль - от 1 до 5."
+    i = dialogs.get_random_int(1, 6)
+    answer = "В эфире передача 💥 \"Русская рулетка\" 💥!\nСегодня с нами решил сыграть {} {}. Пожелаем ему удачи!".format(username_title, username)
+    answer += "\n\nИтак, наш игрок заряжает револьвер, всего патронов в нём {}.\nВращается барабан...\nНажимается курок...\n".format(bullets)
+    if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
+        return "На сегодня попытки игры в рулетку израсходованы. Возвращайтесь завтра!"
+    if (i < bullets):
+        current_rep = int_from_db_answer(SQLighter.get_rep(db, user_id, chat_id)[0])
+        current_roulette_lose = int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0])
+        SQLighter.change_rep(db, user_id, chat_id, current_rep - bullets)
+        SQLighter.zero_free_roulette(db, user_id, chat_id)
+        SQLighter.change_roulette_lose(db, user_id, chat_id, current_roulette_lose + 1)
+        answer += "\nБА-БАХ!\n\nЗвучит выстрел, сработала {}-я пуля. Кажется, у нас стало на одного участника меньше.\nБедняга {} теряет {} репутации и отправляется на кладбище до завтра. Помянем неудачника, друзья мои.".format(i, username, bullets)
+    else:
+        current_free_rep = int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0])
+        current_roulette_win = int_from_db_answer(SQLighter.get_roulette_win(db, user_id, chat_id)[0])
+        SQLighter.change_free_rep(db, user_id, chat_id, current_free_rep + bullets)
+        SQLighter.zero_free_roulette(db, user_id, chat_id)
+        SQLighter.change_roulette_win(db, user_id, chat_id, current_roulette_win + 1)
+        answer += "\nЩЁЛК!\n\nВидимо, сами боги присматривают за {}!\nНаш счастливчик получает доступные очки репутации в размере: {}.\nНаши поздравления победителю!".format(username, bullets)
+    return answer
+
+def restore_standard_daily_params():
     user_list = SQLighter.get_users_list(db)
     for user_id_from_bd in user_list:
         user_id = str_from_db_answer(user_id_from_bd)
         SQLighter.restore_free_rep(db, user_id, 10)
         SQLighter.restore_neg_and_pos_rep(db, user_id)
+        SQLighter.restore_free_roulette(db, user_id)
 
 def restore_free_rep_for_user(from_user, to_user, chat_id, free_rep):
     check_admin = check_is_admin(from_user, chat_id)
@@ -295,6 +361,10 @@ def status_by_user(user_id, chat_id):
     result_text += name + CR
     title = "Титул: {}".format(get_user_title(user_id, chat_id).title())
     result_text += title + CR
+    roulette_wins = "Оставался жив в передаче \"Русская рулетка\": {}".format(int_from_db_answer(SQLighter.get_roulette_win(db, user_id, chat_id)[0]))
+    result_text += roulette_wins + CR
+    roulette_loses = "Смертей в передаче \"Русская рулетка\": {}".format(int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0]))
+    result_text += roulette_loses + CR
     activity = "Активность: {}%".format(get_user_activity(user_id, chat_id))
     result_text += activity + CR
     messages = get_user_top_message(user_id, chat_id, True)
@@ -315,12 +385,25 @@ def get_help(user_id, chat_id):
     command_list = "Список доступных команд:\n"
     command_list += "● /top_my - вызов своей статистики только по топам\n"
     command_list += "● /stat - вызов своей общей статистики\n"
-    command_list += "● \"+\" или \"-\" в ответ на сообщение другого пользователя - изменение репутации пользователя"
-    command_list += "● /main_pos - кто сегодня собрал больше всех плюсов?"
-    command_list += "● /main_neg - кто сегодня собрал больше всех минусов?"
+    command_list += "● \"+\" или \"-\" в ответ на сообщение другого пользователя - изменение репутации пользователя\n"
+    command_list += "● /main_pos - кто сегодня собрал больше всех плюсов?\n"
+    command_list += "● /main_neg - кто сегодня собрал больше всех минусов?\n"
+    command_list += "● /fight [username] - вызов игроку с броском кубика. При удаче - урон репутации оппонента и поднятие своей репутации, при неудаче - урон своей репутации.\n"
+    command_list += "● /roulette [bullets] - передача \"Русская рулетка\"."
     if (admin):
         command_list += "\n● /add_free_rep [username] [count] - добавить свободные очки репутации (count) пользователю (username)\n"
         command_list += "● /top_message [username / count] - вызов топа по сообщениям у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /top_rep [username / count] - вызов топа по репутации у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /assign_title [username] [title] - добавить титул (title) пользователю (username)"
+    return command_list
+
+def get_help_PM():
+    command_list = "Список доступных команд (без команд администратора):\n"
+    command_list += "● /top_my - вызов своей статистики только по топам\n"
+    command_list += "● /stat - вызов своей общей статистики\n"
+    command_list += "● \"+\" или \"-\" в ответ на сообщение другого пользователя - изменение репутации пользователя"
+    command_list += "● /main_pos - кто сегодня собрал больше всех плюсов?\n"
+    command_list += "● /main_neg - кто сегодня собрал больше всех минусов?\n"
+    command_list += "● /fight [username] - вызов игроку с броском кубика. При удаче - урон репутации оппонента и поднятие своей репутации, при неудаче - урон своей репутации.\n"
+    command_list += "● /roulette [bullets] - передача \"Русская рулетка\"."
     return command_list
