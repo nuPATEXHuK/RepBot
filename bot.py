@@ -49,10 +49,13 @@ async def roulette(message: types.Message):
         else:
             await message.answer(answer)
 
+@dp.message_handler(commands=["roll"])
+async def roll(message: types.Message):
+    await message.answer(f.roll(message.from_user.id, message.chat.id))
+
 @dp.message_handler(commands=["add_free_rep"])
 async def add_free_rep_for_user(message: types.Message):
     if (message.chat.id < 0):
-        answer = userErrorMessage
         error = True
         parameters = message.text.replace("/add_free_rep", "").replace("@AppleBunBot", "").strip().split(" ")
         if (len(parameters) == 2):
