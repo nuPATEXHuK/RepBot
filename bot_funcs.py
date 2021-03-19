@@ -115,9 +115,11 @@ def fight_with_player(from_user, to_user, chat_id):
             if (i == 1):
                 rep_offset = 2
                 lose = "Критическая неудача!"
-            current_rep = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
-            SQLighter.change_rep(db, from_user, chat_id, current_rep - (1 * rep_offset))
-            answer += "{} из 6. {}\n\n{} {} {} Репутация снижена и составляет сейчас {}.".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_rep - (1 * rep_offset))
+            current_rep_from = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
+            SQLighter.change_rep(db, from_user, chat_id, current_rep_from - (1 * rep_offset))
+            current_rep_to = int_from_db_answer(SQLighter.get_rep(db, to_user_id, chat_id)[0])
+            SQLighter.change_rep(db, to_user_id, chat_id, current_rep_to + (1 * rep_offset))
+            answer += "{} из 6. {}\n\n{} {} {}\nРепутация нападающего: {} (-{}).\nРепутация жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_rep_from - (1 * rep_offset), 1 * rep_offset , current_rep_to + (1 * rep_offset), 1 * rep_offset)
         else:
             win = "Удача!"
             if (i == 6):
@@ -127,7 +129,7 @@ def fight_with_player(from_user, to_user, chat_id):
             current_rep_to = int_from_db_answer(SQLighter.get_rep(db, to_user_id, chat_id)[0])
             SQLighter.change_rep(db, from_user, chat_id, current_rep_from + (1 * rep_offset))
             SQLighter.change_rep(db, to_user_id, chat_id, current_rep_to - (1 * rep_offset))
-            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nРепутация нападающего: {}\nРепутация жертвы: {}".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_rep_from + (1 * rep_offset), current_rep_to - (1 * rep_offset))
+            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nРепутация нападающего: {} (+{}).\nРепутация жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_rep_from + (1 * rep_offset), 1 * rep_offset, current_rep_to - (1 * rep_offset), 1 * rep_offset)
     else:
         answer = "{} {} {}".format(from_username_title, from_username, dialogs.get_fight_against_yourself_dialog())
     return answer
