@@ -8,9 +8,9 @@ import configparser
 import os
 
 if (os.name == 'Windows'):
-    config_path = 'data\\config.cfg'
+    config_path = 'data\\config_windows.cfg'
 else:
-    config_path = 'data/config.cfg'
+    config_path = 'data/config_linux.cfg'
 
 # Получение токена бота из конфига
 def get_token():
