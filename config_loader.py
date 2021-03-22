@@ -5,17 +5,23 @@
 '''
 
 import configparser
+import os
+
+if (os.name == 'Windows'):
+    config_path = 'data\\config.cfg'
+else:
+    config_path = 'data/config.cfg'
 
 # Получение токена бота из конфига
 def get_token():
     config = configparser.ConfigParser()
-    config.read('data\config.cfg')
+    config.read(config_path)
     token = config.get('main', 'token')
     return token
 
 # Получение название файла с БД из конфига
 def get_DB():
     config = configparser.ConfigParser()
-    config.read('data\config.cfg')
+    config.read(config_path)
     db_file = config.get('main', 'db_file')
     return db_file
