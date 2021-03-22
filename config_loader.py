@@ -17,5 +17,5 @@ def get_token():
 def get_DB():
     config = configparser.ConfigParser()
     config.read('data\config.cfg')
-    token = config.get('main', 'db_file')
-    return token
+    db_file = config.get('main', 'db_file')
+    return db_file
