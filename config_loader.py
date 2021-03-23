@@ -7,7 +7,7 @@
 import configparser
 import os
 
-if (os.name == 'Windows'):
+if (os.name == 'nt'):
     config_path = 'data\\config_windows.cfg'
 else:
     config_path = 'data/config_linux.cfg'
