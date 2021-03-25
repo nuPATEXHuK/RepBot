@@ -349,6 +349,7 @@ def get_top_active(user_id, chat_id, count):
         i = 1
         for top_user in top_act_list:
             user_and_act = str_from_db_answer(top_user).split(" ")
+            print(user_and_act)
             user_id = user_and_act[0]
             username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
             print(int_from_db_answer(user_and_act[1]))
