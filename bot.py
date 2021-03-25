@@ -179,7 +179,7 @@ async def scheduler(wait_for):
     while True:
         await asyncio.sleep(wait_for)
         now = datetime.strftime(datetime.now(pytz.timezone('Europe/Moscow')), "%X")
-        if (now == "00:00:00"):
+        if (now == "11:50:00"):
             chat_ids = f.get_all_chat_ids()
             if (len(chat_ids) > 0):
                 for chat_id in f.get_all_chat_ids():
