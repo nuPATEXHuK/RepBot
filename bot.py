@@ -66,10 +66,10 @@ async def add_free_rep_for_user(message: types.Message):
         else:
             await message.answer(answer)
 
-@dp.message_handler(commands=["top_message"])
+@dp.message_handler(commands=["top_msg"])
 async def top_message(message: types.Message):
     if (message.chat.id < 0):
-        count = message.text.replace("/top_message", "").replace("@AppleBunBot", "").strip().split(" ")
+        count = message.text.replace("/top_msg", "").replace("@AppleBunBot", "").strip().split(" ")
         answer = f.get_top_message(message.from_user.id, message.chat.id, count[0])
         await message.answer(answer)
         await asyncio.sleep(60)
@@ -84,6 +84,19 @@ async def top_rep(message: types.Message):
     if (message.chat.id < 0):
         count = message.text.replace("/top_rep", "").replace("@AppleBunBot", "").strip().split(" ")
         answer = f.get_top_rep(message.from_user.id, message.chat.id, count[0])
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["top_act"])
+async def top_active(message: types.Message):
+    if (message.chat.id < 0):
+        count = message.text.replace("/top_act", "").replace("@AppleBunBot", "").strip().split(" ")
+        answer = f.get_top_active(message.from_user.id, message.chat.id, count[0])
         await message.answer(answer)
         await asyncio.sleep(60)
         try:
@@ -126,7 +139,7 @@ async def main_neg(message: types.Message):
         await message.answer(f.get_main_neg(message.chat.id))
 
 @dp.message_handler(commands=["help"])
-async def start(message: types.Message):
+async def help(message: types.Message):
     if (message.chat.id < 0):
         await message.answer(f.get_help(message.from_user.id, message.chat.id))
         await asyncio.sleep(60)

@@ -248,7 +248,7 @@ def get_user_activity(user_id, chat_id):
     if (all_activity != 0):
         return round(user_activity / all_activity * 100, 2)
     else:
-        return "Активность чата отсуствует"
+        return "Активность в чате отсуствует"
 
 def get_my_top(user_id, username, chat_id):
     user_title = get_user_title(user_id, chat_id)
@@ -323,6 +323,40 @@ def get_top_rep(user_id, chat_id, count):
     else:
         return get_user_top_rep(to_user, chat_id, False)
 
+def get_top_active(user_id, chat_id, count):
+    check_admin = check_is_admin(user_id, chat_id)
+    if (check_admin != ""):
+        return check_admin
+    try:
+        count = int(count)
+    except:
+        may_be_user = check_and_get_username(count)
+        count = 0
+    if (count < 1):
+        count = 0
+    try:
+        to_user = int_from_db_answer(SQLighter.get_id_by_username(db, may_be_user)[0])
+    except:
+        to_user = ""
+    if (to_user == ""):
+        count_act = ""
+        if (count > 0):
+            count_act = "-{}".format(count)
+        top_act_list = SQLighter.get_top_act_list(db, chat_id, count)
+        all_activity = get_all_activity(chat_id)
+        answer = "Топ{} по активности:\n".format(count_act)
+        i = 1
+        for top_user in top_act_list:
+            user_and_act = str_from_db_answer(top_user).split(" ")
+            user_id = user_and_act[0]
+            username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+            act_count = round(user_and_act[1] / all_activity * 100, 2)
+            answer += "{}. {} {}. Активность: {}\n".format(i, get_user_title(user_id, chat_id).title(), username, act_count)
+            i += 1
+        return answer
+    else:
+        return get_user_top_act(to_user, chat_id, False)
+
 def get_user_top_message(user_id, chat_id, my_stat):
     top_msg_list = SQLighter.get_top_message_list(db, chat_id, 0)
     user_msg = int_from_db_answer(SQLighter.get_message_count_stat(db, user_id, chat_id)[0])
@@ -360,6 +394,28 @@ def get_user_top_rep(user_id, chat_id, my_stat):
             user_and_rep = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_rep[0])):
                 answer = "{} {}.\nРепутация: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_rep, i)
+            i += 1
+    return answer
+
+def get_user_top_act(user_id, chat_id, my_stat):
+    top_act_list = SQLighter.get_top_act_list(db, chat_id, 0)
+    user_act = get_user_activity(user_id, chat_id)
+    if (type(user_act) != float):
+        return user_act
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+    i = 1
+    answer = "{}, тебя нет в топе. Обратись к администратору бота.".format(username)
+    if (my_stat):
+        for top_user in top_act_list:
+            user_and_act = str_from_db_answer(top_user).split(" ")
+            if (user_id == int(user_and_act[0])):
+                answer = "Активность: {}\nРанг в топе по активности: {}\n".format(user_act, i)
+            i += 1
+    else:
+        for top_user in top_act_list:
+            user_and_act = str_from_db_answer(top_user).split(" ")
+            if (user_id == int(user_and_act[0])):
+                answer = "{} {}.\nАктивность: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_act, i)
             i += 1
     return answer
 
@@ -412,7 +468,7 @@ def status_by_user(user_id, chat_id):
     result_text += roulette_wins + CR
     roulette_loses = "Смертей в передаче \"Русская рулетка\": {}".format(int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0]))
     result_text += roulette_loses + CR
-    activity = "Активность: {}%".format(get_user_activity(user_id, chat_id))
+    activity = get_user_top_act(user_id, chat_id, True)
     result_text += activity + CR
     messages = get_user_top_message(user_id, chat_id, True)
     result_text += messages
@@ -453,6 +509,7 @@ def get_help(user_id, chat_id):
         command_list += "\n● /add_free_rep [username] [count] - добавить свободные очки репутации (count) пользователю (username)\n"
         command_list += "● /top_message [username / count] - вызов топа по сообщениям у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /top_rep [username / count] - вызов топа по репутации у конкретного пользователя (username) или по количеству (count)\n"
+        command_list += "● /top_act [username / count] - вызов топа по активности у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /assign_title [username] [title] - добавить титул (title) пользователю (username)"
     return command_list
 
