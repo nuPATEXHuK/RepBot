@@ -232,7 +232,6 @@ def add_message_stat(chat_id, from_user, username, char_count):
         SQLighter.add_new_stat(db, from_user, chat_id)
     current_messages_count = int_from_db_answer(SQLighter.get_message_count_stat(db, from_user, chat_id)[0])
     current_char_count = int_from_db_answer(SQLighter.get_char_count_stat(db, from_user, chat_id)[0])
-    print("{}, {}".format(current_char_count, char_count))
     SQLighter.add_message_stat(db, current_messages_count + 1, current_char_count + char_count, chat_id, from_user)
 
 def get_all_activity(chat_id):
