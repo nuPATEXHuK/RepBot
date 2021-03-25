@@ -4,7 +4,8 @@ __pycache__/
 *$py.class
 
 # Working files (not examples)
-config.cfg
+config_windows.cfg
+config_linux.cfg
 database.db
 
 # C extensions
