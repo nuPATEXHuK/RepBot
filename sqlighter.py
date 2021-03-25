@@ -136,17 +136,17 @@ class SQLighter:
         with self.connection:
             if (int(count) > 0):
                 count = " LIMIT {}".format(count)
-                return self.cursor.execute("SELECT user_id, char_count FROM users_stat WHERE chat_id={} ORDER BY char_count DESC{};".format(chat_id, count)).fetchall()
+                return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY char_count DESC{};".format(chat_id, count)).fetchall()
             else:
-                return self.cursor.execute("SELECT user_id, char_count FROM users_stat WHERE chat_id={} ORDER BY char_count DESC;".format(chat_id)).fetchall()
+                return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY char_count DESC;".format(chat_id)).fetchall()
 
     def get_top_act_list(self, chat_id, count):
         with self.connection:
             if (int(count) > 0):
                 count = " LIMIT {}".format(count)
-                return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY reputation DESC{};".format(chat_id, count)).fetchall()
+                return self.cursor.execute("SELECT user_id, char_count FROM users_stat WHERE chat_id={} ORDER BY reputation DESC{};".format(chat_id, count)).fetchall()
             else:
-                return self.cursor.execute("SELECT user_id, reputation FROM users_stat WHERE chat_id={} ORDER BY reputation DESC;".format(chat_id)).fetchall()
+                return self.cursor.execute("SELECT user_id, char_count FROM users_stat WHERE chat_id={} ORDER BY reputation DESC;".format(chat_id)).fetchall()
 
     def zero_free_roulette(self, user_id, chat_id):
         with self.connection:
