@@ -180,6 +180,40 @@ async def scheduler(wait_for):
         await asyncio.sleep(wait_for)
         now = datetime.strftime(datetime.now(pytz.timezone('Europe/Moscow')), "%X")
         if (now == "00:00:00"):
+            chat_ids = f.get_all_chat_ids()
+            if (len(chat_ids) > 0):
+                for chat_id in f.get_all_chat_ids():
+                    await bot.send_message(chat_id, "Дамы и господа, подводим итоги дня!")
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "В эфире передача 💥 \"Русская рулетка\" 💥!\nИтак, давайте же узнаем, кто у нас на сегодня сыграл в ящик.")
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "3 - ищем улики на месте преступления 🔍")
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "2 - проверяем подворотни 👀")
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "1 - обзванием морги ☎️")
+                    await asyncio.sleep(1)
+                    dead_list = f.get_all_dead(chat_id)
+                    if (len(dead_list) > 0):
+                        dead_report = ""
+                        for dead in dead_list:
+                            dead_report += dead + ".\nПричина смерти: " + f.dialogs.get_cause_of_death() + "\n"
+                            dead_report += "\n Помянем павших."
+                            await bot.send_message(chat_id, "А вот и список мертвецов на сегодня, которые бросили вызов и проиграли:\n{}".format(dead_report))
+                    else:
+                        await bot.send_message(chat_id, "Вот это да! Ни единого трупа не нашлось. Что это? Удача? Или же страх перед опасной игрой? 😏")
+                    await asyncio.sleep(3)
+                    await bot.send_message(chat_id, "Но это ещё не всё. Давайте посмотрим, кто у нас сегодня {}, а кто {}".format(f.dialogs.get_fight_top(), f.dialogs.get_fight_loser()))
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "3 - считаем циферки с уроном 🧮")
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "2 - заглядываем на главную арену чата ⚔️🛡")
+                    await asyncio.sleep(1)
+                    await bot.send_message(chat_id, "1 - строим на глаз график побед и поражений 📈📉")
+                    await asyncio.sleep(1)
+                    fight_top = f.get_fight_top(chat_id)
+                    fight_loser = f.get_fight_loser(chat_id)
+                    await bot.send_message(chat_id, "Лучший боец:\n{}\n\nХудший боец:\n{}".format(fight_top, fight_loser))
             f.restore_standard_daily_params()
 
 # Стартовая функция для запуска бота.

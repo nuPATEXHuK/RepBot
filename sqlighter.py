@@ -7,6 +7,10 @@ class SQLighter:
         self.connection = sqlite3.connect(database_file)
         self.cursor = self.connection.cursor()
     
+    def get_chat_ids(self):
+        with self.connection:
+            return self.cursor.execute("SELECT DISTINCT chat_id FROM users_stat ORDER BY chat_id").fetchall()
+
     # 
     def get_users_list(self):
         with self.connection:
@@ -163,6 +167,46 @@ class SQLighter:
     def get_roulette_lose(self, user_id, chat_id):
         with self.connection:
             return self.cursor.execute("SELECT roulette_lose FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+
+    def change_roulette_today(self, user_id, chat_id):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET roulette_today=0 WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+    
+    def restore_roulette_today(self, user_id):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET roulette_today=1 WHERE user_id={}".format(user_id)).fetchall()
+
+    def get_battle_glory(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT battle_glory FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+
+    def change_battle_glory(self, user_id, chat_id, glory):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET battle_glory={} WHERE user_id={} AND chat_id={}".format(glory, user_id, chat_id)).fetchall()
+    
+    def get_battle_glory_offset(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT battle_glory_offset FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+    
+    def change_battle_glory_offset(self, user_id, chat_id, glory):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET battle_glory_offset={} WHERE user_id={} AND chat_id={}".format(glory, user_id, chat_id)).fetchall()
+
+    def restore_battle_glory_offset(self, user_id):
+        with self.connection:
+            self.cursor.execute("UPDATE users_stat SET battle_glory_offset=0 WHERE user_id={}".format(user_id)).fetchall()
+
+    def get_fight_top(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE chat_id={} ORDER BY battle_glory_offset DESC LIMIT 1;".format(chat_id)).fetchall()
+    
+    def get_fight_loser(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE chat_id={} ORDER BY battle_glory_offset ASC LIMIT 1;".format(chat_id)).fetchall()
+
+    def get_all_dead_in_chat(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE roulette_today=0 AND chat_id={}".format(chat_id)).fetchall()
 
     # Закрытие подключения к БД
     def close(self):

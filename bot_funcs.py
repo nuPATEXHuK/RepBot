@@ -7,7 +7,7 @@ db = SQLighter(cl.get_DB())
 
 def get_user_title(user_id, chat_id):
     title_from_db = str_from_db_answer(SQLighter.get_user_title(db, user_id, chat_id)[0]).strip()
-    if (title_from_db == "None"):
+    if (title_from_db == "None" or title_from_db == ""):
         return "сударь"
     else:
         return title_from_db
@@ -109,27 +109,39 @@ def fight_with_player(from_user, to_user, chat_id):
     if (from_user != to_user_id):
         i = dialogs.get_random_int(1, 6)
         SQLighter.change_free_rep(db, from_user, chat_id, free_rep - 2)
-        rep_offset = 1
+        battle_glory_offset = 1
         if (i < 4):
             lose = "Неудача!"
             if (i == 1):
-                rep_offset = 2
+                battle_glory_offset = 2
                 lose = "Критическая неудача!"
-            current_rep_from = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
-            SQLighter.change_rep(db, from_user, chat_id, current_rep_from - (1 * rep_offset))
-            current_rep_to = int_from_db_answer(SQLighter.get_rep(db, to_user_id, chat_id)[0])
-            SQLighter.change_rep(db, to_user_id, chat_id, current_rep_to + (1 * rep_offset))
-            answer += "{} из 6. {}\n\n{} {} {}\nРепутация нападающего: {} (-{}).\nРепутация жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_rep_from - (1 * rep_offset), 1 * rep_offset , current_rep_to + (1 * rep_offset), 1 * rep_offset)
+            current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
+            current_battle_glory_offset_from = int_from_db_answer(SQLighter.get_battle_glory_offset(db, from_user, chat_id)[0])
+            current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
+            current_battle_glory_offset_to = int_from_db_answer(SQLighter.get_battle_glory_offset(db, to_user_id, chat_id)[0])
+            
+            SQLighter.change_battle_glory(db, from_user, chat_id, current_battle_glory_from - battle_glory_offset)
+            SQLighter.change_battle_glory_offset(db, from_user, chat_id, current_battle_glory_offset_from - battle_glory_offset)
+            SQLighter.change_battle_glory(db, to_user_id, chat_id, current_battle_glory_to + battle_glory_offset)
+            SQLighter.change_battle_glory_offset(db, to_user_id, chat_id, current_battle_glory_offset_to + battle_glory_offset)
+            
+            answer += "{} из 6. {}\n\n{} {} {}\nБоевая слава нападающего: {} (-{}).\nБоевая слава жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_battle_glory_from - battle_glory_offset, battle_glory_offset , current_battle_glory_to + battle_glory_offset, battle_glory_offset)
         else:
             win = "Удача!"
             if (i == 6):
-                rep_offset = 2
+                battle_glory_offset = 2
                 win = "Критическая удача!"
-            current_rep_from = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
-            current_rep_to = int_from_db_answer(SQLighter.get_rep(db, to_user_id, chat_id)[0])
-            SQLighter.change_rep(db, from_user, chat_id, current_rep_from + (1 * rep_offset))
-            SQLighter.change_rep(db, to_user_id, chat_id, current_rep_to - (1 * rep_offset))
-            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nРепутация нападающего: {} (+{}).\nРепутация жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_rep_from + (1 * rep_offset), 1 * rep_offset, current_rep_to - (1 * rep_offset), 1 * rep_offset)
+            current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
+            current_battle_glory_offset_from = int_from_db_answer(SQLighter.get_battle_glory_offset(db, from_user, chat_id)[0])
+            current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
+            current_battle_glory_offset_to = int_from_db_answer(SQLighter.get_battle_glory_offset(db, to_user_id, chat_id)[0])
+
+            SQLighter.change_battle_glory(db, from_user, chat_id, current_battle_glory_from + battle_glory_offset)
+            SQLighter.change_battle_glory_offset(db, from_user, chat_id, current_battle_glory_offset_from + battle_glory_offset)
+            SQLighter.change_battle_glory(db, to_user_id, chat_id, current_battle_glory_to - battle_glory_offset)
+            SQLighter.change_battle_glory_offset(db, to_user_id, chat_id, current_battle_glory_offset_to - battle_glory_offset)
+
+            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nБоевая слава нападающего: {} (+{}).\nБоевая слава жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_battle_glory_from + battle_glory_offset, battle_glory_offset, current_battle_glory_to - battle_glory_offset, battle_glory_offset)
     else:
         answer = "{} {} {}".format(from_username_title, from_username, dialogs.get_fight_against_yourself_dialog())
     return answer
@@ -149,19 +161,26 @@ def roulette(user_id, chat_id, bullets):
     if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
         return "На сегодня попытки игры в рулетку израсходованы. Возвращайтесь завтра!"
     if (i < bullets):
-        current_rep = int_from_db_answer(SQLighter.get_rep(db, user_id, chat_id)[0])
+        current_battle_glory = int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0])
+        current_battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
         current_roulette_lose = int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0])
-        SQLighter.change_rep(db, user_id, chat_id, current_rep - bullets)
+        SQLighter.change_battle_glory(db, user_id, chat_id, current_battle_glory - bullets)
+        SQLighter.change_battle_glory_offset(db, user_id, chat_id, current_battle_glory_offset - bullets)
         SQLighter.zero_free_roulette(db, user_id, chat_id)
         SQLighter.change_roulette_lose(db, user_id, chat_id, current_roulette_lose + 1)
-        answer += "\nБА-БАХ!\n\nЗвучит выстрел, сработала {}-я пуля. Кажется, у нас стало на одного участника меньше.\nБедняга {} теряет {} репутации и отправляется на кладбище до завтра. Помянем неудачника, друзья мои.".format(i, username, bullets)
+        SQLighter.change_roulette_today(db, user_id, chat_id)
+        answer += "\nБА-БАХ!\n\nЗвучит выстрел, сработала {}-я пуля. Кажется, у нас стало на одного участника меньше.\nБедняга {} теряет очки боевой славы в размере {} и отправляется на кладбище до завтра. Ждём его в вечерних сводках криминальных новостей.".format(i, username, bullets)
     else:
+        current_battle_glory = int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0])
+        current_battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
         current_free_rep = int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0])
         current_roulette_win = int_from_db_answer(SQLighter.get_roulette_win(db, user_id, chat_id)[0])
+        SQLighter.change_battle_glory(db, user_id, chat_id, current_battle_glory + bullets)
+        SQLighter.change_battle_glory_offset(db, user_id, chat_id, current_battle_glory_offset + bullets)
         SQLighter.change_free_rep(db, user_id, chat_id, current_free_rep + bullets)
         SQLighter.zero_free_roulette(db, user_id, chat_id)
         SQLighter.change_roulette_win(db, user_id, chat_id, current_roulette_win + 1)
-        answer += "\nЩЁЛК!\n\nВидимо, сами боги присматривают за {}!\nНаш счастливчик получает доступные очки репутации в размере: {}.\nНаши поздравления победителю!".format(username, bullets)
+        answer += "\nЩЁЛК!\n\nВидимо, сами боги присматривают за {}!\nНаш счастливчик получает доступные очки репутации и боевую славу в размере: {}.\nНаши поздравления победителю!".format(username, bullets)
     return answer
 
 def roll(user_id, chat_id):
@@ -179,6 +198,8 @@ def restore_standard_daily_params():
         SQLighter.restore_free_rep(db, user_id, 10)
         SQLighter.restore_neg_and_pos_rep(db, user_id)
         SQLighter.restore_free_roulette(db, user_id)
+        SQLighter.restore_roulette_today(db, user_id)
+        SQLighter.restore_battle_glory_offset(db, user_id)
 
 def restore_free_rep_for_user(from_user, to_user, chat_id, free_rep):
     check_admin = check_is_admin(from_user, chat_id)
@@ -362,6 +383,22 @@ def get_main_neg(chat_id):
     else:
         return "Ох, какие же сегодня все лапоньки в чате. :З\nДружба, жвачка и никаких минусов?"
 
+def get_all_chat_ids():
+    chat_id_list = []
+    ids = SQLighter.get_chat_ids(db)
+    if (len(ids) > 0):
+        for chat_id in ids:
+            chat_id_list.append(int_from_db_answer(chat_id))
+    return chat_id_list
+
+def get_fight_top(chat_id):
+    user_id = int_from_db_answer(SQLighter.get_fight_top(db, chat_id)[0])
+    return "{} {}. Показатель боевой славы за сегодня: {}".format(get_user_title(user_id, chat_id).title(), str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]), int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0]))
+
+def get_fight_loser(chat_id):
+    user_id = int_from_db_answer(SQLighter.get_fight_loser(db, chat_id)[0])
+    return "{} {}. Показатель боевой славы за сегодня: {}".format(get_user_title(user_id, chat_id).title(), str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]), int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0]))
+
 # Формирование статуса.
 def status_by_user(user_id, chat_id):
     line = "_____________________"
@@ -383,9 +420,20 @@ def status_by_user(user_id, chat_id):
     result_text += rep
     free_rep = "Свободных очков репутации: {}".format(int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0]))
     result_text += free_rep + CR
-    
+    current_battle_glory = "Боевая слава: {}".format(int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0]))
+    result_text += current_battle_glory + CR
     status = result_text + line
     return status
+
+def get_all_dead(chat_id):
+    dead_list = []
+    deads = SQLighter.get_all_dead_in_chat(db, chat_id)
+    if (len(deads) > 0):
+        for dead_id_from_db in deads:
+            dead_id = int_from_db_answer(dead_id_from_db)
+            full_name = "{} {}".format(get_user_title(dead_id, chat_id).capitalize(), str_from_db_answer(SQLighter.get_username_by_id(db, dead_id)[0]))
+            dead_list.append("● " + full_name)
+    return dead_list
 
 def get_help(user_id, chat_id):
     admin = True
