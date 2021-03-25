@@ -255,6 +255,7 @@ def get_my_top(user_id, username, chat_id):
     answer = "Топ {} {}:\n\n".format(user_title, username)
     answer += get_user_top_message(user_id, chat_id, True)
     answer += get_user_top_rep(user_id, chat_id, True)
+    answer += get_user_top_act(user_id, chat_id, True)
     return answer
 
 def get_top_message(user_id, chat_id, count):
@@ -350,7 +351,7 @@ def get_top_active(user_id, chat_id, count):
             user_and_act = str_from_db_answer(top_user).split(" ")
             user_id = user_and_act[0]
             username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
-            act_count = round(user_and_act[1] / all_activity * 100, 2)
+            act_count = round(int_from_db_answer(user_and_act[1]) / all_activity * 100, 2)
             answer += "{}. {} {}. Активность: {}\n".format(i, get_user_title(user_id, chat_id).title(), username, act_count)
             i += 1
         return answer
