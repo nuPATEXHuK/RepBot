@@ -246,6 +246,7 @@ def get_user_activity(user_id, chat_id):
     user_activity = int_from_db_answer(SQLighter.get_user_activity(db, user_id, chat_id)[0])
     all_activity = get_all_activity(chat_id)
     if (all_activity != 0):
+        print(round(user_activity / all_activity * 100, 2))
         return round(user_activity / all_activity * 100, 2)
     else:
         return "Активность в чате отсуствует"
@@ -345,6 +346,7 @@ def get_top_active(user_id, chat_id, count):
             count_act = "-{}".format(count)
         top_act_list = SQLighter.get_top_act_list(db, chat_id, count)
         all_activity = get_all_activity(chat_id)
+        print(all_activity)
         answer = "Топ{} по активности:\n".format(count_act)
         i = 1
         for top_user in top_act_list:
@@ -353,7 +355,6 @@ def get_top_active(user_id, chat_id, count):
             user_id = user_and_act[0]
             username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
             print(int_from_db_answer(user_and_act[1]))
-            print(all_activity)
             act_count = round(int_from_db_answer(user_and_act[1]) / all_activity * 100, 2)
             print(act_count)
             answer += "{}. {} {}. Активность: {}\n".format(i, get_user_title(user_id, chat_id).title(), username, act_count)
