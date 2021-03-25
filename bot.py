@@ -211,7 +211,7 @@ async def scheduler(wait_for):
                         dead_report = ""
                         for dead in dead_list:
                             dead_report += dead + ".\nПричина смерти: " + f.dialogs.get_cause_of_death() + "\n"
-                            dead_report += "\n Помянем павших."
+                        dead_report += "\n Помянем павших."
                         await bot.send_message(chat_id, "А вот и список мертвецов на сегодня, которые бросили вызов и проиграли:\n{}".format(dead_report))
                     else:
                         await bot.send_message(chat_id, "Вот это да! Ни единого трупа не нашлось. Что это? Удача? Или же страх перед опасной игрой? 😏")
@@ -226,7 +226,14 @@ async def scheduler(wait_for):
                     await asyncio.sleep(1)
                     fight_top = f.get_fight_top(chat_id)
                     fight_loser = f.get_fight_loser(chat_id)
-                    await bot.send_message(chat_id, "Лучший боец:\n{}\n\nХудший боец:\n{}".format(fight_top, fight_loser))
+                    if (fight_top != "" or fight_loser != ""):
+                        if (fight_top != ""):
+                            fight_top = "Лучший боец: {}\n\n".format(fight_top)
+                        if (fight_loser != ""):
+                            fight_loser = "Худший боец: {}".format(fight_loser)
+                        await bot.send_message(chat_id, "{}{}".format(fight_top, fight_loser))
+                    else:
+                        await bot.send_message(chat_id, "Арена пустует, людям не хватает хлеба и зрелищ! Ну, может хлеб и есть, а вот в кровавых битвах сильная нехватка. Давайте уже, деритесь!")
             f.restore_standard_daily_params()
 
 # Стартовая функция для запуска бота.
