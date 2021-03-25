@@ -5,7 +5,6 @@ __pycache__/
 
 # Working files (not examples)
 config.cfg
-database.db
 
 # C extensions
 *.so
