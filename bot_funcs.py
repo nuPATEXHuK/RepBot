@@ -351,7 +351,7 @@ def get_top_active(user_id, chat_id, count):
             user_id = user_and_act[0]
             username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
             act_count = round(int_from_db_answer(user_and_act[1]) / all_activity * 100, 2)
-            answer += "{}. {} {}. Активность: {}\n".format(i, get_user_title(user_id, chat_id).title(), username, act_count)
+            answer += "{}. {} {}. Активность: {}%\n".format(i, get_user_title(user_id, chat_id).title(), username, act_count)
             i += 1
         return answer
     else:
@@ -409,13 +409,13 @@ def get_user_top_act(user_id, chat_id, my_stat):
         for top_user in top_act_list:
             user_and_act = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_act[0])):
-                answer = "Активность: {}\nРанг в топе по активности: {}\n".format(user_act, i)
+                answer = "Активность: {}%\nРанг в топе по активности: {}\n".format(user_act, i)
             i += 1
     else:
         for top_user in top_act_list:
             user_and_act = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_act[0])):
-                answer = "{} {}.\nАктивность: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_act, i)
+                answer = "{} {}.\nАктивность: {}%\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_act, i)
             i += 1
     return answer
 
