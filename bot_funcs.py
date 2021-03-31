@@ -61,13 +61,20 @@ def get_random_event(user_id, chat_id):
     answer = check_is_admin(user_id, chat_id)
     if (answer != ""):
         return answer
-    #event = random_events[dialogs.get_random_int(1, len(random_events)-1)]
+    answer = "Боги хаоса были призваны в этот мир!\n"
+    event = random_events[dialogs.get_random_int(1, len(random_events)-1)]
     user_list = SQLighter.get_users_list_from_chat(db, chat_id)
-    to_user = str_from_db_answer(SQLighter.get_username_by_id(db, int_from_db_answer(user_list[dialogs.get_random_int(0, len(user_list)-1)]))[0])
-    print(to_user)
-    return to_user
-    #if (event == "add_free_rep"):
-    #    restore_free_rep_for_user(user_id, to_user, chat_id, dialogs.get_random_int(1, 10))
+    rand_user_id = int_from_db_answer(user_list[dialogs.get_random_int(0, len(user_list)-1)])
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, rand_user_id)[0])
+    user_title = get_user_title(rand_user_id, chat_id)
+    to_user = "@{}".format(username)
+    if (event == "add_free_rep"):
+        rand_free_rep = dialogs.get_random_int(1, 10)
+        result = restore_free_rep_for_user(user_id, to_user, chat_id, rand_free_rep)
+        answer += "Богам не хватает веселья. Они дарят свободную репутацию в размере {} для {} {}. Пользуйся с умом этим даром.".format(rand_free_rep, user_title, username)
+        return answer
+    answer += "Но, кажется, сейчас они не в настроении что-то делать. "
+    return answer
 
 # Проверка строки на повышение или понижение репутации.
 def change_rep(chat_id, message, from_user, to_user):
