@@ -170,6 +170,18 @@ async def set_title(message: types.Message):
         else:
             await message.answer(answer)
 
+@dp.message_handler(commands=["test"])
+async def test(message: types.Message):
+    chat_id = message.chat.id
+    if (int(message.chat.id) < 0):
+        fight_top = f.get_fight_top(chat_id)
+        fight_loser = f.get_fight_loser(chat_id)
+        if (fight_top != ""):
+            fight_top = "Лучший боец: {}\n\n".format(fight_top)
+        if (fight_loser != ""):
+            fight_loser = "Худший боец: {}".format(fight_loser)
+        await message.answer("{}{}".format(fight_top, fight_loser))
+
 # Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])
 async def message_listener(message: types.Message):
