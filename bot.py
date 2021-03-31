@@ -170,17 +170,10 @@ async def set_title(message: types.Message):
         else:
             await message.answer(answer)
 
-@dp.message_handler(commands=["test"])
-async def test(message: types.Message):
-    chat_id = message.chat.id
-    if (int(message.chat.id) < 0):
-        fight_top = f.get_fight_top(chat_id)
-        fight_loser = f.get_fight_loser(chat_id)
-        if (fight_top != ""):
-            fight_top = "Лучший боец: {}\n\n".format(fight_top)
-        if (fight_loser != ""):
-            fight_loser = "Худший боец: {}".format(fight_loser)
-        await message.answer("{}{}".format(fight_top, fight_loser))
+@dp.message_handler(commands=["random"])
+async def random(message: types.Message):
+    if (message.chat.id < 0):
+        await message.answer(f.get_random_event(message.from_user.id, message.chat.id))
 
 # Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])
