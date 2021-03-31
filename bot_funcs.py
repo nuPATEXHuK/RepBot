@@ -62,7 +62,7 @@ def get_random_event(user_id, chat_id):
     if (answer != ""):
         return answer
     #event = random_events[dialogs.get_random_int(1, len(random_events)-1)]
-    user_list = SQLighter.get_users_list(db)
+    user_list = SQLighter.get_users_list_from_chat(db, chat_id)
     to_user = str_from_db_answer(SQLighter.get_username_by_id(db, int_from_db_answer(user_list[dialogs.get_random_int(1, len(user_list)-1)]))[0])
     print(to_user)
     return to_user

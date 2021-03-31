@@ -16,6 +16,10 @@ class SQLighter:
         with self.connection:
             return self.cursor.execute("SELECT user_id FROM users_stat").fetchall()
 
+    def  get_users_list_from_chat(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE chat_id={}".format(chat_id)).fetchall()
+
     def get_rep(self, to_user, chat_id):
         with self.connection:
             return self.cursor.execute("SELECT reputation FROM users_stat WHERE user_id={} AND chat_id={}".format(to_user, chat_id)).fetchall()
