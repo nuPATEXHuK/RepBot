@@ -450,7 +450,7 @@ def get_all_chat_ids():
 def get_fight_top(chat_id):
     user_id = int_from_db_answer(SQLighter.get_fight_top(db, chat_id)[0])
     battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
-    if (battle_glory_offset > 0):
+    if (battle_glory_offset != 0):
         return "{} {}.\nПоказатель боевой славы за сегодня: {}".format(get_user_title(user_id, chat_id).title(), str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]), battle_glory_offset)
     else:
         return ""
@@ -458,7 +458,7 @@ def get_fight_top(chat_id):
 def get_fight_loser(chat_id):
     user_id = int_from_db_answer(SQLighter.get_fight_loser(db, chat_id)[0])
     battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
-    if (battle_glory_offset > 0):
+    if (battle_glory_offset != 0):
         return "{} {}.\nПоказатель боевой славы за сегодня: {}".format(get_user_title(user_id, chat_id).title(), str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]), battle_glory_offset)
     else:
         return ""
