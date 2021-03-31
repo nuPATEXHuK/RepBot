@@ -5,6 +5,8 @@ import random
 
 db = SQLighter(cl.get_DB())
 
+random_events = ["nothing", "add_free_rep", "lose_free_rep", "add_rep", "lose_rep", "add_glory", "lose_glory"]
+
 def get_user_title(user_id, chat_id):
     title_from_db = str_from_db_answer(SQLighter.get_user_title(db, user_id, chat_id)[0]).strip()
     if (title_from_db == "None" or title_from_db == ""):
@@ -53,6 +55,19 @@ def int_from_db_answer(db_answer):
 # Функция для преобразования ответа от БД в строку.
 def str_from_db_answer(db_answer):
     return str(db_answer).replace("(", "").replace(")", "").replace(",", "").replace("'", "")
+
+# Случайное событие в чате
+def get_random_event(user_id, chat_id):
+    answer = check_is_admin(user_id, chat_id)
+    if (answer != ""):
+        return answer
+    #event = random_events[dialogs.get_random_int(1, len(random_events)-1)]
+    user_list = SQLighter.get_users_list(db)
+    to_user = str_from_db_answer(SQLighter.get_username_by_id(db, int_from_db_answer(user_list[dialogs.get_random_int(1, len(user_list)-1)]))[0])
+    print(to_user)
+    return to_user
+    #if (event == "add_free_rep"):
+    #    restore_free_rep_for_user(user_id, to_user, chat_id, dialogs.get_random_int(1, 10))
 
 # Проверка строки на повышение или понижение репутации.
 def change_rep(chat_id, message, from_user, to_user):
