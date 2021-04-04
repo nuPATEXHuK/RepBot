@@ -200,7 +200,7 @@ def roulette(user_id, chat_id, bullets):
         SQLighter.change_battle_glory(db, user_id, chat_id, current_battle_glory + bullets)
         SQLighter.change_battle_glory_offset(db, user_id, chat_id, current_battle_glory_offset + bullets)
         SQLighter.change_free_rep(db, user_id, chat_id, current_free_rep + bullets)
-        SQLighter.zero_free_roulette(db, user_id, chat_id)
+        # SQLighter.zero_free_roulette(db, user_id, chat_id)
         SQLighter.change_roulette_win(db, user_id, chat_id, current_roulette_win + 1)
         answer += "\nЩЁЛК!\n\nВидимо, сами боги присматривают за {}!\nНаш счастливчик получает доступные очки репутации и боевую славу в размере: {}.\nНаши поздравления победителю!".format(username, bullets)
     return answer
