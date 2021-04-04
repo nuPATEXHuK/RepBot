@@ -5,7 +5,7 @@ import random
 
 db = SQLighter(cl.get_DB())
 
-random_events = ["nothing", "add_free_rep", "lose_free_rep", "add_rep", "lose_rep", "add_glory", "lose_glory"]
+random_events = ["nothing", "add_free_rep", "lose_free_rep", "add_rep", "lose_rep"]
 
 def get_user_title(user_id, chat_id):
     title_from_db = str_from_db_answer(SQLighter.get_user_title(db, user_id, chat_id)[0]).strip()
@@ -70,10 +70,31 @@ def get_random_event(user_id, chat_id):
     to_user = "@{}".format(username)
     if (event == "add_free_rep"):
         rand_free_rep = dialogs.get_random_int(1, 10)
-        result = restore_free_rep_for_user(user_id, to_user, chat_id, rand_free_rep)
-        answer += "Богам не хватает веселья. Они дарят свободную репутацию в размере {} для {} {}. Пользуйся с умом этим даром.".format(rand_free_rep, user_title, username)
+        restore_free_rep_for_user(user_id, to_user, chat_id, rand_free_rep)
+        answer += "Богам не хватает веселья. Они дарят доступные очки репутации в размере {} для {} {}. Пользуйся этим даром с умом.".format(rand_free_rep, user_title, username)
         return answer
-    answer += "Но, кажется, сейчас они не в настроении что-то делать. "
+    if (event == "lose_free_rep"):
+        rand_free_rep = 0 - dialogs.get_random_int(1, 10)
+        restore_free_rep_for_user(user_id, to_user, chat_id, rand_free_rep)
+        answer += "Боги на сегодня устали. Щелчком пальцев, {} {} теряет свободную репутацию в размере {}.".format(user_title, username, rand_free_rep)
+        return answer
+    if (event == "add_rep"):
+        rand_rep = dialogs.get_random_int(1, 10)
+        current_rep = int_from_db_answer(SQLighter.get_rep(db, rand_user_id, chat_id)[0])
+        current_rep_pos_offset = int_from_db_answer(SQLighter.get_rep_pos_offset(db, rand_user_id, chat_id)[0])
+        SQLighter.change_rep(db, rand_user_id, chat_id, current_rep + rand_rep)
+        SQLighter.change_pos_rep(db, rand_user_id, chat_id, current_rep_pos_offset + rand_rep)
+        answer += "Боги шумно веселятся. Им явно понравился {} {}, так что его репутация растёт! Он получил повышение репутации в размере {}.".format(user_title, username, rand_rep)
+        return answer
+    if (event == "lose_rep"):
+        rand_rep = 0 - dialogs.get_random_int(1, 10)
+        current_rep = int_from_db_answer(SQLighter.get_rep(db, rand_user_id, chat_id)[0])
+        current_rep_pos_offset = int_from_db_answer(SQLighter.get_rep_pos_offset(db, rand_user_id, chat_id)[0])
+        SQLighter.change_rep(db, rand_user_id, chat_id, current_rep + rand_rep)
+        SQLighter.change_pos_rep(db, rand_user_id, chat_id, current_rep_pos_offset + rand_rep)
+        answer += "Боги гневаются. А первым попался им под руку {} {}. Бедняга получет на свою голову понижение репутации в размере {}.".format(user_title, username, rand_rep)
+        return answer
+    answer += "Но, кажется, сейчас они не в настроении что-то делать."
     return answer
 
 # Проверка строки на повышение или понижение репутации.
@@ -540,7 +561,8 @@ def get_help(user_id, chat_id):
         command_list += "● /top_message [username / count] - вызов топа по сообщениям у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /top_rep [username / count] - вызов топа по репутации у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /top_act [username / count] - вызов топа по активности у конкретного пользователя (username) или по количеству (count)\n"
-        command_list += "● /assign_title [username] [title] - добавить титул (title) пользователю (username)"
+        command_list += "● /assign_title [username] [title] - добавить титул (title) пользователю (username)\n"
+        command_list += "● /random - вызов случайного события для конференции"
     return command_list
 
 def get_help_PM():
