@@ -25,7 +25,7 @@ def check_and_get_username(username):
 def check_is_admin(user_id, chat_id):
     admin = int_from_db_answer(SQLighter.check_is_admin(db, user_id, chat_id)[0])
     if (admin == 0):
-        user_title = get_user_title(user_id, chat_id)
+        user_title = get_user_title(user_id, chat_id).title()
         return "{} {}, у вас недостаточно прав для выполнения этой команды.".format(user_title, str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0]))
     else:
         return ""
