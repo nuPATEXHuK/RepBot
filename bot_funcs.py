@@ -6,6 +6,10 @@ import random
 db = SQLighter(cl.get_DB())
 
 random_events = ["nothing", "add_free_rep", "lose_free_rep", "add_rep", "lose_rep"]
+revolvers = {}
+chat_games = {}
+last_winner = {}
+active_roulette = False
 
 def get_user_title(user_id, chat_id):
     title_from_db = str_from_db_answer(SQLighter.get_user_title(db, user_id, chat_id)[0]).strip()
@@ -139,6 +143,7 @@ def change_rep(chat_id, message, from_user, to_user):
             current_rep = int_from_db_answer(SQLighter.get_rep(db, from_user, chat_id)[0])
     return answer
 
+# Бой против игрока
 def fight_with_player(from_user, to_user, chat_id):
     free_rep = int_from_db_answer(SQLighter.get_free_rep(db, from_user, chat_id)[0])
     if (free_rep < 2):
@@ -158,73 +163,121 @@ def fight_with_player(from_user, to_user, chat_id):
             if (i == 1):
                 battle_glory_offset = 2
                 lose = "Критическая неудача!"
+            change_battle_glory(from_user, chat_id, 0 - battle_glory_offset)
+            change_battle_glory(to_user_id, chat_id, battle_glory_offset)
             current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
-            current_battle_glory_offset_from = int_from_db_answer(SQLighter.get_battle_glory_offset(db, from_user, chat_id)[0])
             current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
-            current_battle_glory_offset_to = int_from_db_answer(SQLighter.get_battle_glory_offset(db, to_user_id, chat_id)[0])
-            
-            SQLighter.change_battle_glory(db, from_user, chat_id, current_battle_glory_from - battle_glory_offset)
-            SQLighter.change_battle_glory_offset(db, from_user, chat_id, current_battle_glory_offset_from - battle_glory_offset)
-            SQLighter.change_battle_glory(db, to_user_id, chat_id, current_battle_glory_to + battle_glory_offset)
-            SQLighter.change_battle_glory_offset(db, to_user_id, chat_id, current_battle_glory_offset_to + battle_glory_offset)
-            
             answer += "{} из 6. {}\n\n{} {} {}\nБоевая слава нападающего: {} (-{}).\nБоевая слава жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_battle_glory_from - battle_glory_offset, battle_glory_offset , current_battle_glory_to + battle_glory_offset, battle_glory_offset)
         else:
             win = "Удача!"
             if (i == 6):
                 battle_glory_offset = 2
                 win = "Критическая удача!"
+            change_battle_glory(from_user, chat_id, battle_glory_offset)
+            change_battle_glory(to_user_id, chat_id, 0 - battle_glory_offset)
             current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
-            current_battle_glory_offset_from = int_from_db_answer(SQLighter.get_battle_glory_offset(db, from_user, chat_id)[0])
             current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
-            current_battle_glory_offset_to = int_from_db_answer(SQLighter.get_battle_glory_offset(db, to_user_id, chat_id)[0])
-
-            SQLighter.change_battle_glory(db, from_user, chat_id, current_battle_glory_from + battle_glory_offset)
-            SQLighter.change_battle_glory_offset(db, from_user, chat_id, current_battle_glory_offset_from + battle_glory_offset)
-            SQLighter.change_battle_glory(db, to_user_id, chat_id, current_battle_glory_to - battle_glory_offset)
-            SQLighter.change_battle_glory_offset(db, to_user_id, chat_id, current_battle_glory_offset_to - battle_glory_offset)
-
             answer += "{} из 6. {}\n\n{} {} {} {} {}.\nБоевая слава нападающего: {} (+{}).\nБоевая слава жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_battle_glory_from + battle_glory_offset, battle_glory_offset, current_battle_glory_to - battle_glory_offset, battle_glory_offset)
     else:
         answer = "{} {} {}".format(from_username_title, from_username, dialogs.get_fight_against_yourself_dialog())
     return answer
 
-def roulette(user_id, chat_id, bullets):
+# Изменение боевой славы
+def change_battle_glory(user_id, chat_id, battle_glory):
+    current_battle_glory = int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0])
+    current_battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
+    SQLighter.change_battle_glory(db, user_id, chat_id, current_battle_glory + battle_glory)
+    SQLighter.change_battle_glory_offset(db, user_id, chat_id, current_battle_glory_offset + battle_glory)
+
+def get_user_id_by_username(username):
+    return int_from_db_answer(SQLighter.get_id_by_username(db, username)[0])
+
+# Рулетка
+def roulette(user_id, chat_id):
     username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
     username_title = get_user_title(user_id, chat_id)
+    new_game = False
     try:
-        bullets = int(bullets)
+        last_rw = last_winner[chat_id]
     except:
-        return ""
-    if (bullets < 1 or bullets > 5):
-        return "Не удалось зарядить револьвер. Попробуйте ещё раз, указав правильное количество патронов - от 1 до 5."
-    i = dialogs.get_random_int(1, 6)
-    answer = "В эфире передача 💥 \"Русская рулетка\" 💥!\nСегодня с нами решил сыграть {} {}. Пожелаем ему удачи!".format(username_title, username)
-    answer += "\n\nИтак, наш игрок заряжает револьвер, всего патронов в нём {}.\nВращается барабан...\nНажимается курок...\n".format(bullets)
-    if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
-        return "На сегодня попытки игры в рулетку израсходованы. Возвращайтесь завтра!"
-    if (i < bullets):
-        current_battle_glory = int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0])
-        current_battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
-        current_roulette_lose = int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0])
-        SQLighter.change_battle_glory(db, user_id, chat_id, current_battle_glory - bullets)
-        SQLighter.change_battle_glory_offset(db, user_id, chat_id, current_battle_glory_offset - bullets)
+        last_rw = ""
+    try:
+        roulette_current_bullets = chat_games[chat_id]
+        roulette_current_bullets += 1
+        chat_games[chat_id] = roulette_current_bullets
+        current_revolver_drum = revolvers[chat_id]
+        while True:
+            bullet = dialogs.get_random_int(0, 5)
+            if (current_revolver_drum[bullet] != 0):
+                continue
+            else:
+                current_revolver_drum[bullet] = 1
+                break
+        revolvers[chat_id] = current_revolver_drum
+    except:
+        if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
+            return "На сегодня попытки игры в рулетку у вас израсходованы. Возвращайтесь завтра!"
+        if (int_from_db_answer(SQLighter.check_dead_user(db, user_id, chat_id)[0]) < 1):
+            return "Играть в рулетку с мертвецами не интересно. Воскрешайся и приходи завтра!"
+        new_game = True
+        chat_games[chat_id] = 1
+        roulette_current_bullets = 1
+        current_revolver_drum = [0, 0, 0, 0, 0, 0]
+        current_revolver_drum[dialogs.get_random_int(0, 5)] = 1
+        revolvers[chat_id] = current_revolver_drum
+    if (new_game):
+        answer = "В эфире передача 💥 \"Русская рулетка\" 💥!\nНа этот раз поиграть в рулетку с нами решился {} {}. Пожелаем ему удачи!".format(username_title, username)
         SQLighter.zero_free_roulette(db, user_id, chat_id)
+    else:
+        if (last_winner != ""):
+            answer = "{} {} не хочет останавливаться! Ещё один патрон на готове, а вызов судьбе уже брошен повторно!".format(username_title.title(), username)
+        else:
+            answer = "Ситуация накаляется, вызов принят! Наш смельчак - {} {}.".format(username_title, username)
+    answer += "\n\nНаш игрок заряжает револьвер. Это {} ход, патронов в пистолете столько же. Посмотрим, повезёт ли ему.\nИгрок вращает барабан...\nПриставляет пистолет к виску...\nНажимает курок...\n".format(roulette_current_bullets)
+
+    boom = dialogs.get_random_int(0, 5)
+    drum = get_drum(current_revolver_drum, boom)
+    if (current_revolver_drum[boom] == 1):
+        current_roulette_lose = int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0])
         SQLighter.change_roulette_lose(db, user_id, chat_id, current_roulette_lose + 1)
         SQLighter.change_roulette_today(db, user_id, chat_id)
-        answer += "\nБА-БАХ!\n\nЗвучит выстрел, сработала {}-я пуля. Кажется, у нас стало на одного участника меньше.\nБедняга {} теряет очки боевой славы в размере {} и отправляется на кладбище до завтра. Ждём его в вечерних сводках криминальных новостей.".format(i, username, bullets)
+        SQLighter.zero_free_roulette(db, user_id, chat_id)
+        chat_games.pop(chat_id)
+        revolvers.pop(chat_id)
+        if (last_rw != ""):
+            last_winner.pop(chat_id)
+        answer += "\nБА-БАХ!\n[{}]\n\nЗвучит выстрел, сработала {}-я пуля. Кажется, у нас стало на одного участника меньше.\nБедняга {} теряет 10 очков боевой славы и отправляется на кладбище до завтра. Ждём его в вечерних сводках криминальных новостей.".format(drum, boom + 1, username)
     else:
-        current_battle_glory = int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0])
-        current_battle_glory_offset = int_from_db_answer(SQLighter.get_battle_glory_offset(db, user_id, chat_id)[0])
-        current_free_rep = int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0])
         current_roulette_win = int_from_db_answer(SQLighter.get_roulette_win(db, user_id, chat_id)[0])
-        SQLighter.change_battle_glory(db, user_id, chat_id, current_battle_glory + bullets)
-        SQLighter.change_battle_glory_offset(db, user_id, chat_id, current_battle_glory_offset + bullets)
-        SQLighter.change_free_rep(db, user_id, chat_id, current_free_rep + bullets)
-        # SQLighter.zero_free_roulette(db, user_id, chat_id)
         SQLighter.change_roulette_win(db, user_id, chat_id, current_roulette_win + 1)
-        answer += "\nЩЁЛК!\n\nВидимо, сами боги присматривают за {}!\nНаш счастливчик получает доступные очки репутации и боевую славу в размере: {}.\nНаши поздравления победителю!".format(username, bullets)
+        last_winner[chat_id] = username
+        if (roulette_current_bullets < 5):
+            change_battle_glory(user_id, chat_id, roulette_current_bullets * 2)
+            answer += "\nЩЁЛК!\n[{}]\n\nВидимо, сами боги присматривают за {}!\nВыжившему вручается приз в виде {} единиц боевой славы! Посмотрим, осмелится ли кто-то принять вызов и повысить ставки.".format(drum, username, roulette_current_bullets*2)
+        else:
+            change_battle_glory(user_id, chat_id, roulette_current_bullets * 3)
+            answer += "\nЩЁЛК!\n[{}]\n\nПросто невероятно! Какая-то необычайная удача преследует {}!\nОн становится нашим победителем и забирает свой приз в размере {} единиц боевой славы! О твоей удаче будут слагать легенды!".format(drum, username, roulette_current_bullets*3)
+            chat_games.pop(chat_id)
+            revolvers.pop(chat_id)
+            last_winner.pop(chat_id)
     return answer
+
+def get_drum(drum, bullet):
+    drum_list = ""
+    i = 0
+    while (i < 6):
+        if (drum[i] == 1):
+            if (bullet == i):
+                drum_list += "💥"
+            else:
+                drum_list += "⚫️"
+        else:
+            if (bullet == i):
+                drum_list += "🟢"
+            else:
+                drum_list += "⚪️"
+        i += 1
+    return drum_list
 
 def roll(user_id, chat_id):
     username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
@@ -554,7 +607,8 @@ def get_help(user_id, chat_id):
     command_list += "● /main_pos - кто сегодня собрал больше всех плюсов?\n"
     command_list += "● /main_neg - кто сегодня собрал больше всех минусов?\n"
     command_list += "● /fight [username] - вызов игроку с броском кубика. При удаче - урон по боевой славе оппонента и поднятие своей боевой славы, при неудаче - урон своей боевой славе.\n"
-    command_list += "● /roulette [bullets] - передача \"Русская рулетка\".\n"
+    command_list += "● /roulette - передача \"Русская рулетка\".\n"
+    command_list += "● /roulette_stat - проверка текущего количества патронов в стволе.\n"
     command_list += "● /roll - кинуть кубик"
     if (admin):
         command_list += "\n● /add_free_rep [username] [count] - добавить свободные очки репутации (count) пользователю (username)\n"
@@ -573,6 +627,6 @@ def get_help_PM():
     command_list += "● /main_pos - кто сегодня собрал больше всех плюсов?\n"
     command_list += "● /main_neg - кто сегодня собрал больше всех минусов?\n"
     command_list += "● /fight [username] - вызов игроку с броском кубика. При удаче - урон по боевой славе оппонента и поднятие своей боевой славы, при неудаче - урон своей боевой славе.\n"
-    command_list += "● /roulette [bullets] - передача \"Русская рулетка\".\n"
+    command_list += "● /roulette - передача \"Русская рулетка\".\n"
     command_list += "● /roll - кинуть кубик"
     return command_list

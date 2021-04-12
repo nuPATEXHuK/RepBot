@@ -35,20 +35,6 @@ async def fight(message: types.Message):
         else:
             await message.answer(answer)
 
-@dp.message_handler(commands=["roulette"])
-async def roulette(message: types.Message):
-    if (message.chat.id < 0):
-        answer = userErrorMessage
-        error = True
-        parameter = message.text.replace("/roulette", "").replace("@AppleBunBot", "").strip()
-        answer = f.roulette(message.from_user.id, message.chat.id, parameter)
-        if (answer != ""):
-            error = False
-        if (error):
-            await message.answer(userErrorMessage)
-        else:
-            await message.answer(answer)
-
 @dp.message_handler(commands=["roll"])
 async def roll(message: types.Message):
     await message.answer(f.roll(message.from_user.id, message.chat.id))
@@ -174,6 +160,31 @@ async def set_title(message: types.Message):
 async def random(message: types.Message):
     if (message.chat.id < 0):
         await message.answer(f.get_random_event(message.from_user.id, message.chat.id))
+
+@dp.message_handler(commands=["roulette"])
+async def roulette(message: types.Message):
+    chat_id = message.chat.id
+    if (chat_id < 0):
+        answer = f.roulette(message.from_user.id, chat_id)
+        if (answer != ""):
+            await message.answer(answer)
+        else:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["roulette_stat"])
+async def roulette_stat(message: types.Message):
+    if (message.chat.id < 0):
+        answer = errorMessage
+        try:
+            roulette_current_bullets = f.chat_games[message.chat.id]
+            answer = "В револьвере уже заряжены патроны в количестве {}.".format(roulette_current_bullets)
+        except:
+            answer = "Игра ещё не начата. Начните её командой /roulette."
+        await message.answer(answer)
+
+@dp.message_handler(commands=["restore"])
+async def restore(message: types.Message):
+    f.restore_standard_daily_params()
 
 # Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])

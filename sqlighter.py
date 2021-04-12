@@ -219,6 +219,10 @@ class SQLighter:
     def get_all_dead_in_chat(self, chat_id):
         with self.connection:
             return self.cursor.execute("SELECT user_id FROM users_stat WHERE roulette_today=0 AND chat_id={}".format(chat_id)).fetchall()
+    
+    def check_dead_user(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT roulette FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
 
     # Закрытие подключения к БД
     def close(self):
