@@ -182,6 +182,17 @@ async def roulette_stat(message: types.Message):
             answer = "Игра ещё не начата. Начните её командой /roulette."
         await message.answer(answer)
 
+@dp.message_handler(commands=["stop_roulette"])
+async def stop_roulette(message: types.Message):
+    if (message.chat.id < 0):
+        answer = errorMessage
+        try:
+            f.chat_games[message.chat.id]
+            answer = f.stop_roulette(message.from_user.id, message.chat.id)
+        except:
+            answer = "Игра ещё не начата. Начните её командой /roulette."
+        await message.answer(answer)
+
 @dp.message_handler(commands=["restore"])
 async def restore(message: types.Message):
     f.restore_standard_daily_params()

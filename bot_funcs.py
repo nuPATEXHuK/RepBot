@@ -279,6 +279,20 @@ def get_drum(drum, bullet):
         i += 1
     return drum_list
 
+def stop_roulette(user_id, chat_id):
+    try:
+        last_rw = last_winner[chat_id]
+    except:
+        last_rw = ""
+    chat_games.pop(chat_id)
+    revolvers.pop(chat_id)
+    if (last_rw != ""):
+        last_winner.pop(chat_id)
+    change_battle_glory(user_id, chat_id, -5)
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+    username_title = get_user_title(user_id, chat_id)
+    return "{} {} пожертвовал собой и своими 5 очками боевой славы чтобы разрядить пистолет. Что это - смелая попытка спасти кого-то от смерти или страх перед ней?".format(username_title.title(), username)
+
 def roll(user_id, chat_id):
     username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
     username_title = get_user_title(user_id, chat_id)
@@ -571,9 +585,9 @@ def status_by_user(user_id, chat_id):
     roulette_wins = "Оставался жив в передаче \"Русская рулетка\": {}".format(int_from_db_answer(SQLighter.get_roulette_win(db, user_id, chat_id)[0]))
     result_text += roulette_wins + CR
     roulette_loses = "Смертей в передаче \"Русская рулетка\": {}".format(int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0]))
-    result_text += roulette_loses + CR
+    result_text += roulette_loses + CR + CR
     activity = get_user_top_act(user_id, chat_id, True)
-    result_text += activity + CR
+    result_text += activity
     messages = get_user_top_message(user_id, chat_id, True)
     result_text += messages
     rep = get_user_top_rep(user_id, chat_id, True)
@@ -609,6 +623,7 @@ def get_help(user_id, chat_id):
     command_list += "● /fight [username] - вызов игроку с броском кубика. При удаче - урон по боевой славе оппонента и поднятие своей боевой славы, при неудаче - урон своей боевой славе.\n"
     command_list += "● /roulette - передача \"Русская рулетка\".\n"
     command_list += "● /roulette_stat - проверка текущего количества патронов в стволе.\n"
+    command_list += "● /stop_roulette - разрядить рулетку за 5 единиц боевой славы.\n"
     command_list += "● /roll - кинуть кубик"
     if (admin):
         command_list += "\n● /add_free_rep [username] [count] - добавить свободные очки репутации (count) пользователю (username)\n"
@@ -628,5 +643,7 @@ def get_help_PM():
     command_list += "● /main_neg - кто сегодня собрал больше всех минусов?\n"
     command_list += "● /fight [username] - вызов игроку с броском кубика. При удаче - урон по боевой славе оппонента и поднятие своей боевой славы, при неудаче - урон своей боевой славе.\n"
     command_list += "● /roulette - передача \"Русская рулетка\".\n"
+    command_list += "● /roulette_stat - проверка текущего количества патронов в стволе.\n"
+    command_list += "● /stop_roulette - разрядить рулетку за 5 единиц боевой славы.\n"
     command_list += "● /roll - кинуть кубик"
     return command_list
