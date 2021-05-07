@@ -40,7 +40,7 @@ def fight_pos_list():
     fight_list.append("насмехается над")
     fight_list.append("бьёт по лицу")
     fight_list.append("выполнил идеальный гоп-стоп для")
-    fight_list.append("с первой же раздачи карт собрал флеш рояль во время в покер игры с")
+    fight_list.append("с первой же раздачи карт собрал флеш рояль во время игры в покер с")
     return fight_list
 
 def fight_neg_list():
