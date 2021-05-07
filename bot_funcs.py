@@ -229,7 +229,7 @@ def roulette(user_id, chat_id):
         answer = "В эфире передача 💥 \"Русская рулетка\" 💥!\nИграет {} {}. Пожелаем ему удачи!".format(username_title, username)
         SQLighter.change_roulette_today(db, user_id, chat_id)
     else:
-        if (last_winner == username):
+        if (last_winner[chat_id] == username):
             answer = "{} {} не хочет останавливаться! Ещё один патрон на готове, а вызов судьбе уже брошен повторно!".format(username_title.title(), username)
         else:
             answer = "Ситуация накаляется, вызов принят! Наш смельчак - {} {}.".format(username_title, username)
