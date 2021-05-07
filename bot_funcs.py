@@ -170,7 +170,7 @@ def fight_with_player(from_user, to_user, chat_id):
             change_battle_glory(to_user_id, chat_id, battle_glory_offset)
             current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
             current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
-            answer += "{} из 6. {}\n\n{} {} {}\nБоевая слава нападающего: {} (-{}).\nБоевая слава жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_battle_glory_from - battle_glory_offset, battle_glory_offset , current_battle_glory_to + battle_glory_offset, battle_glory_offset)
+            answer += "{} из 6. {}\n\n{} {} {}\nБоевая слава нападающего: {} (-{}).\nБоевая слава жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_battle_glory_from, battle_glory_offset, current_battle_glory_to, battle_glory_offset)
         else:
             win = "Удача!"
             if (i == 6):
@@ -180,7 +180,7 @@ def fight_with_player(from_user, to_user, chat_id):
             change_battle_glory(to_user_id, chat_id, 0 - battle_glory_offset)
             current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
             current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
-            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nБоевая слава нападающего: {} (+{}).\nБоевая слава жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_battle_glory_from + battle_glory_offset, battle_glory_offset, current_battle_glory_to - battle_glory_offset, battle_glory_offset)
+            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nБоевая слава нападающего: {} (+{}).\nБоевая слава жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_battle_glory_from, battle_glory_offset, current_battle_glory_to, battle_glory_offset)
     else:
         answer = "{} {} {}".format(from_username_title, from_username, dialogs.get_fight_against_yourself_dialog())
     return answer
