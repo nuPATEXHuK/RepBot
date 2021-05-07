@@ -199,7 +199,9 @@ async def stop_roulette(message: types.Message):
 
 @dp.message_handler(commands=["restore"])
 async def restore(message: types.Message):
-    f.restore_standard_daily_params()
+    if (message.from_user.username == "nuPATEXHuK"):
+        f.restore_standard_daily_params()
+        await message.answer("Супер-секретная админская команда выполнена!")
 
 # Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])
