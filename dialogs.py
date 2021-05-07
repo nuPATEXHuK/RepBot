@@ -112,4 +112,8 @@ def mystery_dialog_list():
     mystery_dialog.append("Somebody once told me the world is gonna roll me.")
     mystery_dialog.append("Welcome в мой dungeon, сегодня я твой master. Готовь свои three hundred bucks и я устрою тебе путешествие в deep dark fantasy.")
     mystery_dialog.append("Теперь каждый должен добавлять к своей фразе в конце \"Ня!\". Кто не справится - тот бака)) :З")
+    mystery_dialog.append("Осторожней со своими желаниями, ведь они могут сбыться...")
+    mystery_dialog.append("Вот есть красная нить судьбы. А у нас она почему-то коричневая и резко обрывается.")
+    mystery_dialog.append("It's a trap!")
+    mystery_dialog.append("Это дождь из мужиков, аллилуя!")
     return mystery_dialog
