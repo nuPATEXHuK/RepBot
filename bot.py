@@ -206,7 +206,7 @@ async def restore(message: types.Message):
 @dp.message_handler(commands=["super_secret_mystery_command"])
 async def restore(message: types.Message):
     if (message.chat.id < 0):
-        await message.answer("{} вызывает супер-секретную загадочную команду. Что же случится дальше?".format(message.from_user.username))
+        await message.answer("{} вызывает супер-секретную загадочную команду. {}".format(message.from_user.username, f.get_mystery_dialog()))
 
 # Прослушка сообщений, сбор статистики.
 @dp.message_handler(content_types=['text'])

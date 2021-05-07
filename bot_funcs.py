@@ -60,6 +60,9 @@ def int_from_db_answer(db_answer):
 def str_from_db_answer(db_answer):
     return str(db_answer).replace("(", "").replace(")", "").replace(",", "").replace("'", "")
 
+def get_mystery_dialog():
+    return dialogs.get_mystery_dialog()
+
 # Случайное событие в чате
 def get_random_event(user_id, chat_id):
     answer = check_is_admin(user_id, chat_id)

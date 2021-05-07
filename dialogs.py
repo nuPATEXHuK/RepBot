@@ -27,6 +27,10 @@ def get_fight_loser():
     i = random.randint(0, len(fight_loser_list())-1)
     return fight_loser_list()[i]
 
+def get_mystery_dialog():
+    i = random.randint(0, len(mystery_dialog_list())-1)
+    return mystery_dialog_list()[i]
+
 def fight_pos_list():
     fight_list = []
     fight_list.append("с размаху бьёт киркой")
@@ -90,3 +94,22 @@ def fight_loser_list():
     fight_loser.append("отлично сыграл роль груши для битья.")
     fight_loser.append("главная жертва кибербуллинга.")
     return fight_loser
+
+def mystery_dialog_list():
+    mystery_dialog = []
+    mystery_dialog.append("Что же случится дальше?")
+    mystery_dialog.append("Кажется, что-то хрустнуло. Хм, интересно, что это?")
+    mystery_dialog.append("Мне сейчас показалось, или погода за окном изменилась?")
+    mystery_dialog.append("Вроде ничего не поменялось, но ощущение, что тут что-то не так...")
+    mystery_dialog.append("Три... два... один...")
+    mystery_dialog.append("Вроде выстрел был, нет?")
+    mystery_dialog.append("Про глобальное потепление слышали? Так вот, вроде как сейчас оно стало наступать ещё быстрее.")
+    mystery_dialog.append("Марсиане атакуют!")
+    mystery_dialog.append("Код красный, код красный! Кажется, мы Советский Союз воскресили...")
+    mystery_dialog.append("[Тут должна быть какая-то расисткая или феменисткая шутка, но мы выше этого]")
+    mystery_dialog.append("Готовит доктор Са... bzzz... ную петлю. Вам надо сро... bzzz... та. Конец свя... bzzz...")
+    mystery_dialog.append("Меня зовут Билл. И я хочу сыграть с вами в одну игру...")
+    mystery_dialog.append("Somebody once told me the world is gonna roll me.")
+    mystery_dialog.append("Welcome в мой dungeon, сегодня я твой master. Готовь свои three hundred bucks и я устрою тебе путешествие в deep dark fantasy.")
+    mystery_dialog.append("Теперь каждый должен добавлять к своей фразе в конце \"Ня!\". Кто не справится - тот бака)) :З")
+    return mystery_dialog
