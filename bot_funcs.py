@@ -215,10 +215,10 @@ def roulette(user_id, chat_id):
                 break
         revolvers[chat_id] = current_revolver_drum
     except:
-        if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
-            return "На сегодня попытки игры в рулетку у вас израсходованы. Возвращайтесь завтра!"
         if (int_from_db_answer(SQLighter.check_dead_user(db, user_id, chat_id)[0]) < 1):
             return "Играть в рулетку с мертвецами не интересно. Воскрешайся и приходи завтра!"
+        if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
+            return "На сегодня попытки игры в рулетку у вас израсходованы. Возвращайтесь завтра!"
         new_game = True
         chat_games[chat_id] = 1
         roulette_current_bullets = 1
@@ -226,7 +226,7 @@ def roulette(user_id, chat_id):
         current_revolver_drum[dialogs.get_random_int(0, 5)] = 1
         revolvers[chat_id] = current_revolver_drum
     if (new_game):
-        answer = "В эфире передача 💥 \"Русская рулетка\" 💥!\nНа этот раз поиграть в рулетку с нами решился {} {}. Пожелаем ему удачи!".format(username_title, username)
+        answer = "В эфире передача 💥 \"Русская рулетка\" 💥!\nИграет {} {}. Пожелаем ему удачи!".format(username_title, username)
         SQLighter.zero_free_roulette(db, user_id, chat_id)
     else:
         if (last_winner != ""):

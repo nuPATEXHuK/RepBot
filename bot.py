@@ -21,6 +21,10 @@ userErrorMessage = "Параметры заполнены неверно. Пов
 async def start(message: types.Message):
     await message.answer("Привет, " + message.from_user.username + ".")
 
+@dp.message_handler(commands=["test"])
+async def test(message: types.Message):
+    await message.answer(str(f.last_winner))
+
 @dp.message_handler(commands=["fight"])
 async def fight(message: types.Message):
     if (message.chat.id < 0):
