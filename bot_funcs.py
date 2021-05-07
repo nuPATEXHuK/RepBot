@@ -197,6 +197,7 @@ def get_user_id_by_username(username):
 
 # Рулетка
 def roulette(user_id, chat_id):
+    answer = ""
     username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
     username_title = get_user_title(user_id, chat_id)
     new_game = False
@@ -236,7 +237,7 @@ def roulette(user_id, chat_id):
             answer = "{} {} не хочет останавливаться! Ещё один патрон на готове, а вызов судьбе уже брошен повторно!".format(username_title.title(), username)
         else:
             answer = "Ситуация накаляется, вызов принят! Наш смельчак - {} {}.".format(username_title, username)
-    answer += "\n\nНаш игрок заряжает револьвер. Заряжено патронов: {}.\n\nИгрок вращает барабан...\n\nПриставляет пистолет к виску...\n\nНажимает курок...\n".format(roulette_current_bullets)
+    answer += "\nИгрок заряжает револьвер. Заряжено патронов: {}\n".format(roulette_current_bullets)
 
     boom = dialogs.get_random_int(0, 5)
     drum = get_drum(current_revolver_drum, boom)
@@ -249,14 +250,14 @@ def roulette(user_id, chat_id):
         revolvers.pop(chat_id)
         if (last_rw != ""):
             last_winner.pop(chat_id)
-        answer += "\nБА-БАХ!\n[{}]\n\nЗвучит выстрел, сработала {}-я пуля.\nБедняга {} теряет 10 очков боевой славы и отправляется на кладбище до завтра. Ждём его в вечерних сводках криминальных новостей.".format(drum, boom + 1, username)
+        answer += "\nБА-БАХ!\n\n[{}]\n\nЗвучит выстрел, сработала {}-я пуля.\nБедняга {} теряет 10 очков боевой славы.".format(drum, boom + 1, username)
     else:
         current_roulette_win = int_from_db_answer(SQLighter.get_roulette_win(db, user_id, chat_id)[0])
         SQLighter.change_roulette_win(db, user_id, chat_id, current_roulette_win + 1)
         last_winner[chat_id] = username
         if (roulette_current_bullets < 5):
             change_battle_glory(user_id, chat_id, roulette_current_bullets * 2)
-            answer += "\nЩЁЛК!\n[{}]\n\nВидимо, сами боги присматривают за {}!\nВыжившему вручается приз в виде {} единиц боевой славы! Посмотрим, осмелится ли кто-то принять вызов и повысить ставки.".format(drum, username, roulette_current_bullets*2)
+            answer += "\nЩЁЛК!\n[{}]\n\nВидимо, сами боги присматривают за {}!\nВыжившему вручается приз в виде {} единиц боевой славы!".format(drum, username, roulette_current_bullets*2)
         else:
             change_battle_glory(user_id, chat_id, roulette_current_bullets * 3)
             answer += "\nЩЁЛК!\n[{}]\n\nПросто невероятно! Какая-то необычайная удача преследует {}!\nОн становится нашим победителем и забирает свой приз в размере {} единиц боевой славы! О твоей удаче будут слагать легенды!".format(drum, username, roulette_current_bullets*3)
