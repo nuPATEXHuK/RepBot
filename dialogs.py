@@ -116,4 +116,9 @@ def mystery_dialog_list():
     mystery_dialog.append("Вот есть красная нить судьбы. А у нас она почему-то коричневая и резко обрывается.")
     mystery_dialog.append("It's a trap!")
     mystery_dialog.append("Это дождь из мужиков, аллилуя!")
+    mystery_dialog.append("Будьте уверены, Клементина это запомнит...")
+    mystery_dialog.append("Нам сообщили, что связь с марсианской базой потеряна и там творилась какая-то чертовщина. Так что готовься к миссии, боец.")
+    mystery_dialog.append("Wake the fuck up Samurai, we have a city to burn.")
+    mystery_dialog.append("Помни, что тортик - это ложь! Не верь её обещаниям!")
+    mystery_dialog.append("Зая, а ежедневки в геншине уже выполнены?")
     return mystery_dialog
