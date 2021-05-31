@@ -202,7 +202,7 @@ def roulette(user_id, chat_id):
     username_title = get_user_title(user_id, chat_id)
     new_game = False
     if (int_from_db_answer(SQLighter.check_dead_user(db, user_id, chat_id)[0]) < 1):
-        return "Играть в рулетку с мертвецами не интересно. Воскрешайся и приходи завтра!"
+        return "Играть в рулетку с мертвецами не интересно. Воскрешайся и приходи завтра!", False
     try:
         last_rw = last_winner[chat_id]
     except:
@@ -222,7 +222,7 @@ def roulette(user_id, chat_id):
         revolvers[chat_id] = current_revolver_drum
     except:
         if (int_from_db_answer(SQLighter.get_free_roulette(db, user_id, chat_id)[0]) < 1):
-            return "На сегодня попытки игры в рулетку у вас израсходованы. Возвращайтесь завтра!"
+            return "На сегодня попытки игры в рулетку у вас израсходованы. Возвращайтесь завтра!", False
         new_game = True
         chat_games[chat_id] = 1
         roulette_current_bullets = 1
@@ -234,7 +234,8 @@ def roulette(user_id, chat_id):
 
     boom = dialogs.get_random_int(0, 5)
     drum = get_drum(current_revolver_drum, boom)
-    if (current_revolver_drum[boom] == 1):
+    boom_result = current_revolver_drum[boom] == 1
+    if (boom_result):
         current_roulette_lose = int_from_db_answer(SQLighter.get_roulette_lose(db, user_id, chat_id)[0])
         SQLighter.change_roulette_lose(db, user_id, chat_id, current_roulette_lose + 1)
         SQLighter.change_roulette_today(db, user_id, chat_id)
@@ -257,7 +258,7 @@ def roulette(user_id, chat_id):
             chat_games.pop(chat_id)
             revolvers.pop(chat_id)
             last_winner.pop(chat_id)
-    return answer
+    return answer, boom_result
 
 def get_drum(drum, bullet):
     drum_list = ""

@@ -13,6 +13,8 @@ token = cl.get_token()
 bot = Bot(token)
 dp = Dispatcher(bot)
 
+
+
 errorMessage = "Кажется, что-то пошло не так. Пожалуйста, сообщите администратору бота об этом случае."
 userErrorMessage = "Параметры заполнены неверно. Повторите попытку."
 
@@ -169,9 +171,12 @@ async def random(message: types.Message):
 async def roulette(message: types.Message):
     chat_id = message.chat.id
     if (chat_id < 0):
-        answer = f.roulette(message.from_user.id, chat_id)
+        answer, result = f.roulette(message.from_user.id, chat_id)
         if (answer != ""):
             await message.answer(answer)
+            if result:
+                sti = open("stickers/boom.webp", "rb")
+                await message.answer_sticker(sti)
         else:
             await message.answer(errorMessage)
 
@@ -202,6 +207,28 @@ async def restore(message: types.Message):
     if (message.from_user.username == "nuPATEXHuK"):
         f.restore_standard_daily_params()
         await message.answer("Супер-секретная админская команда выполнена!")
+
+@dp.message_handler(commands=["bonk"])
+async def bonk(message: types.Message):
+    if (message.from_user.username == "hikar1ya"):
+        sti = open("stickers/bonk.webp", "rb")
+        if (message.reply_to_message != None):
+            await message.answer("Госпожа {} делает эпичный bonk слишком horny {}!".format(message.from_user.username, message.reply_to_message.from_user.username))
+            await message.answer_sticker(sti)
+        else:
+            await message.answer("Госпожа {} делает мульти-bonk всем, кто horny!".format(message.from_user.username))
+            await message.answer_sticker(sti)
+
+@dp.message_handler(commands=["horny"])
+async def horny(message: types.Message):
+    if (message.from_user.username == "hikar1ya"):
+        sti = open("stickers/horny.webp", "rb")
+        if (message.reply_to_message != None):
+            await message.answer("Госпожа {} считает, что {} слишком horny!".format(message.from_user.username, message.reply_to_message.from_user.username))
+            await message.answer_sticker(sti)
+        else:
+            await message.answer("Госпожа {} считает, что в чате слишком много horny!".format(message.from_user.username))
+            await message.answer_sticker(sti)
 
 @dp.message_handler(commands=["super_secret_mystery_command"])
 async def restore(message: types.Message):

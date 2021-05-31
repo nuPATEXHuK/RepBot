@@ -9,6 +9,9 @@ config_linux.cfg
 database.db
 test.*
 
+# vscode
+.vscode
+
 # C extensions
 *.so
 
