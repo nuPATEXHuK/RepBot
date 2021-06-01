@@ -230,8 +230,8 @@ async def horny(message: types.Message):
             await message.answer("Госпожа {} считает, что в чате слишком много horny!".format(message.from_user.username))
             await message.answer_sticker(sti)
 
-@dp.message_handler(commands=["block"])
-async def horny(message: types.Message):
+@dp.message_handler(commands=["block_anus"])
+async def block_anus(message: types.Message):
     if (message.from_user.username == "m_boney"):
         sti = open("stickers/stethem.webp", "rb")
         if (message.reply_to_message != None):
@@ -239,6 +239,26 @@ async def horny(message: types.Message):
             await message.answer_sticker(sti)
         else:
             await message.answer("Господин {} запрещает всем творить здесь всякие непотребства.".format(message.from_user.username))
+            await message.answer_sticker(sti)
+
+@dp.message_handler(commands=["trap"])
+async def trap(message: types.Message):
+    if (message.from_user.username == "DurkNicht"):
+        sti = open("stickers/trap.webp", "rb")
+        await message.answer("Ахтунг! {} призван, готовьтесь принимать пикчи (и не только)!".format(message.from_user.username))
+        await message.answer_sticker(sti)
+    else:
+        await message.answer("@DurkNicht, тут тебя зовут, людям нужны трапы!")
+
+@dp.message_handler(commands=["booty"])
+async def booty(message: types.Message):
+    if (message.from_user.username == "kiyoko_koheiri"):
+        sti = open("stickers/booty.tgs", "rb")
+        if (message.reply_to_message != None):
+            await message.answer("Госпожа {} бы потрогала жопку {}, но госпожа hikar1ya всё ещё где-то рядом.".format(message.from_user.username, message.reply_to_message.from_user.username))
+            await message.answer_sticker(sti)
+        else:
+            await message.answer("Госпожа {} раздаёт шлепки по жопке всему чату.".format(message.from_user.username))
             await message.answer_sticker(sti)
 
 @dp.message_handler(commands=["super_secret_mystery_command"])
