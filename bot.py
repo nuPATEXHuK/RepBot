@@ -230,6 +230,17 @@ async def horny(message: types.Message):
             await message.answer("Госпожа {} считает, что в чате слишком много horny!".format(message.from_user.username))
             await message.answer_sticker(sti)
 
+@dp.message_handler(commands=["block"])
+async def horny(message: types.Message):
+    if (message.from_user.username == "m_boney"):
+        sti = open("stickers/stethem.webp", "rb")
+        if (message.reply_to_message != None):
+            await message.answer("Господин {} запрещает {} творить всякие непотребства.".format(message.from_user.username, message.reply_to_message.from_user.username))
+            await message.answer_sticker(sti)
+        else:
+            await message.answer("Господин {} запрещает всем творить здесь всякие непотребства.".format(message.from_user.username))
+            await message.answer_sticker(sti)
+
 @dp.message_handler(commands=["super_secret_mystery_command"])
 async def restore(message: types.Message):
     if (message.chat.id < 0):
