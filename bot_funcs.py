@@ -465,6 +465,39 @@ def get_top_active(user_id, chat_id, count):
     else:
         return get_user_top_act(to_user, chat_id, False)
 
+def get_top_fight(user_id, chat_id, count):
+    check_admin = check_is_admin(user_id, chat_id)
+    if (check_admin != ""):
+        return check_admin
+    try:
+        count = int(count)
+    except:
+        may_be_user = check_and_get_username(count)
+        count = 0
+    if (count < 1):
+        count = 0
+    try:
+        to_user = int_from_db_answer(SQLighter.get_id_by_username(db, may_be_user)[0])
+    except:
+        to_user = ""
+    if (to_user == ""):
+        count_fg = ""
+        if (count > 0):
+            count_fg = "-{}".format(count)
+        top_fg_list = SQLighter.get_top_fg_list(db, chat_id, count)
+        answer = "Топ{} по боевой славе:\n".format(count_fg)
+        i = 1
+        for top_user in top_fg_list:
+            user_and_fg = str_from_db_answer(top_user).split(" ")
+            user_id = user_and_fg[0]
+            username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+            fg_count = user_and_fg[1]
+            answer += "{}. {} {}. Боевая слава: {}\n".format(i, get_user_title(user_id, chat_id).title(), username, fg_count)
+            i += 1
+        return answer
+    else:
+        return get_user_top_fg(to_user, chat_id, False)
+
 def get_user_top_message(user_id, chat_id, my_stat):
     top_msg_list = SQLighter.get_top_message_list(db, chat_id, 0)
     user_msg = int_from_db_answer(SQLighter.get_message_count_stat(db, user_id, chat_id)[0])
@@ -524,6 +557,26 @@ def get_user_top_act(user_id, chat_id, my_stat):
             user_and_act = str_from_db_answer(top_user).split(" ")
             if (user_id == int(user_and_act[0])):
                 answer = "{} {}.\nАктивность: {}%\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_act, i)
+            i += 1
+    return answer
+
+def get_user_top_fg(user_id, chat_id, my_stat):
+    top_fg_list = SQLighter.get_top_fg_list(db, chat_id, 0)
+    user_fg = int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0])
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+    i = 1
+    answer = "{}, тебя нет в топе. Обратись к администратору бота.".format(username)
+    if (my_stat):
+        for top_user in top_fg_list:
+            user_and_fg = str_from_db_answer(top_user).split(" ")
+            if (user_id == int(user_and_fg[0])):
+                answer = "Боевая слава: {}\nРанг в топе по боевой славе: {}\n".format(user_fg, i)
+            i += 1
+    else:
+        for top_user in top_fg_list:
+            user_and_fg = str_from_db_answer(top_user).split(" ")
+            if (user_id == int(user_and_fg[0])):
+                answer = "{} {}.\Боевая слава: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_fg, i)
             i += 1
     return answer
 
@@ -590,6 +643,8 @@ def status_by_user(user_id, chat_id):
     result_text += messages
     rep = get_user_top_rep(user_id, chat_id, True)
     result_text += rep
+    fg = get_user_top_fg(user_id, chat_id, True)
+    result_text += fg
     free_rep = "Свободных очков репутации: {}".format(int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0]))
     result_text += free_rep + CR
     current_battle_glory = "Боевая слава: {}".format(int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0]))

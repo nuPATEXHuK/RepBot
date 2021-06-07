@@ -97,6 +97,19 @@ async def top_active(message: types.Message):
         except:
             await message.answer(errorMessage)
 
+@dp.message_handler(commands=["top_fight"])
+async def top_fight(message: types.Message):
+    if (message.chat.id < 0):
+        count = message.text.replace("/top_fight", "").replace("@AppleBunBot", "").strip().split(" ")
+        answer = f.get_top_fight(message.from_user.id, message.chat.id, count[0])
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
 @dp.message_handler(commands=["top_my"])
 async def top_my(message: types.Message):
     if (message.chat.id < 0):

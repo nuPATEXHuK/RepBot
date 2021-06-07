@@ -152,6 +152,14 @@ class SQLighter:
             else:
                 return self.cursor.execute("SELECT user_id, char_count FROM users_stat WHERE chat_id={} ORDER BY char_count DESC;".format(chat_id)).fetchall()
 
+    def get_top_fg_list(self, chat_id, count):
+        with self.connection:
+            if (int(count) > 0):
+                count = " LIMIT {}".format(count)
+                return self.cursor.execute("SELECT user_id, battle_glory FROM users_stat WHERE chat_id={} ORDER BY battle_glory DESC{};".format(chat_id, count)).fetchall()
+            else:
+                return self.cursor.execute("SELECT user_id, battle_glory FROM users_stat WHERE chat_id={} ORDER BY battle_glory DESC;".format(chat_id)).fetchall()
+
     def zero_free_roulette(self, user_id, chat_id):
         with self.connection:
             self.cursor.execute("UPDATE users_stat SET roulette=0 WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
@@ -218,7 +226,7 @@ class SQLighter:
 
     def get_all_dead_in_chat(self, chat_id):
         with self.connection:
-            return self.cursor.execute("SELECT user_id FROM users_stat WHERE roulette_today=0 AND chat_id={}".format(chat_id)).fetchall()
+            return self.cursor.execute("SELECT user_id FROM users_stat WHERE roulette=0 AND chat_id={}".format(chat_id)).fetchall()
     
     def check_dead_user(self, user_id, chat_id):
         with self.connection:
