@@ -267,7 +267,7 @@ async def booty(message: types.Message):
     if (message.from_user.username == "kiyoko_koheiri"):
         sti = open("stickers/booty.tgs", "rb")
         if (message.reply_to_message != None):
-            await message.answer("Госпожа {} бы потрогала жопку {}, но госпожа hikar1ya всё ещё где-то рядом.".format(message.from_user.username, message.reply_to_message.from_user.username))
+            await message.answer("Госпожа {} шлёпает по жопке {}. Госпожа hikar1ya одобряет.".format(message.from_user.username, message.reply_to_message.from_user.username))
             await message.answer_sticker(sti)
         else:
             await message.answer("Госпожа {} раздаёт шлепки по жопке всему чату.".format(message.from_user.username))
