@@ -223,14 +223,13 @@ async def restore(message: types.Message):
 
 @dp.message_handler(commands=["bonk"])
 async def bonk(message: types.Message):
-    if (message.from_user.username == "hikar1ya"):
-        sti = open("stickers/bonk.webp", "rb")
-        if (message.reply_to_message != None):
-            await message.answer("Госпожа {} делает эпичный bonk слишком horny {}!".format(message.from_user.username, message.reply_to_message.from_user.username))
-            await message.answer_sticker(sti)
-        else:
-            await message.answer("Госпожа {} делает мульти-bonk всем, кто horny!".format(message.from_user.username))
-            await message.answer_sticker(sti)
+    sti = open("stickers/bonk.webp", "rb")
+    if (message.reply_to_message != None):
+        await message.answer("{} {} делает эпичный bonk слишком horny {}!".format(f.get_user_title(message.from_user.id, message.chat.id), message.from_user.username, message.reply_to_message.from_user.username))
+        await message.answer_sticker(sti)
+    else:
+        await message.answer("{} {} делает мульти-bonk всем, кто horny!".format(message.from_user.username))
+        await message.answer_sticker(sti)
 
 @dp.message_handler(commands=["horny"])
 async def horny(message: types.Message):
