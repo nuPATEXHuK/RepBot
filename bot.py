@@ -228,7 +228,7 @@ async def bonk(message: types.Message):
         await message.answer("{} {} делает эпичный bonk слишком horny {}!".format(f.get_user_title(message.from_user.id, message.chat.id), message.from_user.username, message.reply_to_message.from_user.username))
         await message.answer_sticker(sti)
     else:
-        await message.answer("{} {} делает мульти-bonk всем, кто horny!".format(message.from_user.username))
+        await message.answer("{} {} делает мульти-bonk всем, кто horny!".format(f.get_user_title(message.from_user.id, message.chat.id), message.from_user.username))
         await message.answer_sticker(sti)
 
 @dp.message_handler(commands=["horny"])
