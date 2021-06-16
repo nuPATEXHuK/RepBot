@@ -221,6 +221,20 @@ async def restore(message: types.Message):
         f.restore_standard_daily_params()
         await message.answer("Супер-секретная админская команда выполнена!")
 
+@dp.message_handler(commands=["magic_ball"])
+async def magic_ball(message: types.Message):
+    if (message.chat.id < 0):
+        answer = userErrorMessage
+        error = True
+        question = message.text.replace("/magic_ball", "").replace("@AppleBunBot", "").strip()
+        answer = f.magic_ball(message.from_user.id, message.chat.id, question)
+        if (answer != ""):
+            error = False
+        if error:
+            await message.answer(userErrorMessage)
+        else:
+            await message.answer(answer)
+
 @dp.message_handler(commands=["bonk"])
 async def bonk(message: types.Message):
     sti = open("stickers/bonk.webp", "rb")

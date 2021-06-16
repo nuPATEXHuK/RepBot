@@ -31,6 +31,10 @@ def get_mystery_dialog():
     i = random.randint(0, len(mystery_dialog_list())-1)
     return mystery_dialog_list()[i]
 
+def get_magic_ball_dialog():
+    i = random.randint(0, len(magic_ball_dialog_list())-1)
+    return magic_ball_dialog_list()[i]
+
 def fight_pos_list():
     fight_list = []
     fight_list.append("с размаху бьёт киркой")
@@ -122,3 +126,30 @@ def mystery_dialog_list():
     mystery_dialog.append("Помни, что тортик - это ложь! Не верь её обещаниям!")
     mystery_dialog.append("Зая, а ежедневки в геншине уже выполнены?")
     return mystery_dialog
+
+def magic_ball_dialog_list():
+    magic_ball = []
+    magic_ball.append("Бесспорно")
+    magic_ball.append("Предрешено")
+    magic_ball.append("Никаких сомнений")
+    magic_ball.append("Определённо да")
+    magic_ball.append("Можешь быть уверен в этом")
+    magic_ball.append("Мне кажется - да")
+    magic_ball.append("Вероятнее всего")
+    magic_ball.append("Хорошие перспективы")
+    magic_ball.append("Знаки говорят - да")
+    magic_ball.append("Да")
+    magic_ball.append("Пока не ясно, попробуй снова")
+    magic_ball.append("Спроси позже")
+    magic_ball.append("Лучше не рассказывать")
+    magic_ball.append("Сейчас нельзя предсказать")
+    magic_ball.append("Сконцентрируйся и спроси опять")
+    magic_ball.append("Даже не думай")
+    magic_ball.append("Мне кажется - нет")
+    magic_ball.append("По моим данным - нет")
+    magic_ball.append("Перспективы не очень хорошие")
+    magic_ball.append("Весьма сомнительно")
+    magic_ball.append("Нет")
+    magic_ball.append("Точно нет")
+    magic_ball.append("Секретный ответ-пасхалка! А чтобы узнать ответ - спроси ещё раз")
+    return magic_ball

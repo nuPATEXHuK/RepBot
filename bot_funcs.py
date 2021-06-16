@@ -624,6 +624,12 @@ def get_fight_loser(chat_id):
     else:
         return ""
 
+def magic_ball(user_id, chat_id, question):
+    ball_answer = dialogs.get_magic_ball_dialog()
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+    user_title = get_user_title(user_id, chat_id).capitalize()
+    return "{} {} трясёт шар судьбы и задаёт вопрос: {}\n\nШар судьбы отвечает: {}".format(user_title, username, question, ball_answer)
+
 # Формирование статуса.
 def status_by_user(user_id, chat_id):
     line = "_____________________"
@@ -677,12 +683,14 @@ def get_help(user_id, chat_id):
     command_list += "● /roulette - передача \"Русская рулетка\".\n"
     command_list += "● /roulette_stat - проверка текущего количества патронов в стволе.\n"
     command_list += "● /stop_roulette - разрядить рулетку за 5 единиц боевой славы.\n"
-    command_list += "● /roll - кинуть кубик"
+    command_list += "● /roll - кинуть кубик\n"
+    command_list += "● /magic_ball - попросить совет у шара предсказаний"
     if (admin):
         command_list += "\n● /add_free_rep [username] [count] - добавить свободные очки репутации (count) пользователю (username)\n"
         command_list += "● /top_message [username / count] - вызов топа по сообщениям у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /top_rep [username / count] - вызов топа по репутации у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /top_act [username / count] - вызов топа по активности у конкретного пользователя (username) или по количеству (count)\n"
+        command_list += "● /top_fight [username / count] - вызов топа по боевой славе у конкретного пользователя (username) или по количеству (count)\n"
         command_list += "● /assign_title [username] [title] - добавить титул (title) пользователю (username)\n"
         command_list += "● /random - вызов случайного события для конференции"
     return command_list
@@ -698,5 +706,6 @@ def get_help_PM():
     command_list += "● /roulette - передача \"Русская рулетка\".\n"
     command_list += "● /roulette_stat - проверка текущего количества патронов в стволе.\n"
     command_list += "● /stop_roulette - разрядить рулетку за 5 единиц боевой славы.\n"
-    command_list += "● /roll - кинуть кубик"
+    command_list += "● /roll - кинуть кубик\n"
+    command_list += "● /magic_ball - попросить совет у шара предсказаний"
     return command_list
