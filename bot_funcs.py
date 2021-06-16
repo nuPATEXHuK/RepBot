@@ -625,6 +625,8 @@ def get_fight_loser(chat_id):
         return ""
 
 def magic_ball(user_id, chat_id, question):
+    if question == "":
+        return ""
     ball_answer = dialogs.get_magic_ball_dialog()
     username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
     user_title = get_user_title(user_id, chat_id).capitalize()
