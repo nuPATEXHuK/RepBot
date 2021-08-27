@@ -160,6 +160,10 @@ class SQLighter:
             else:
                 return self.cursor.execute("SELECT user_id, battle_glory FROM users_stat WHERE chat_id={} ORDER BY battle_glory DESC;".format(chat_id)).fetchall()
 
+    def get_top_pirate_list(self, chat_id):
+        with self.connection:
+            return self.cursor.execute("SELECT user_id, gold, bank FROM users_stat WHERE chat_id={}".format(chat_id)).fetchall()
+
     def zero_free_roulette(self, user_id, chat_id):
         with self.connection:
             self.cursor.execute("UPDATE users_stat SET roulette=0 WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
@@ -231,6 +235,94 @@ class SQLighter:
     def check_dead_user(self, user_id, chat_id):
         with self.connection:
             return self.cursor.execute("SELECT roulette FROM users_stat WHERE user_id={} AND chat_id={}".format(user_id, chat_id)).fetchall()
+
+    def get_gold(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT gold FROM users_stat WHERE user_id={user_id} AND chat_id={chat_id}").fetchall()
+
+    def get_bank_gold(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT bank FROM users_stat WHERE user_id={user_id} AND chat_id={chat_id}").fetchall()
+
+    def get_bank_gold_all_chat_by_user(self, user_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT bank, chat_id FROM users_stat WHERE user_id={user_id}").fetchall()
+
+    def set_gold(self, user_id, chat_id, gold):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET gold={gold} WHERE user_id={user_id} AND chat_id={chat_id}")
+    
+    def set_bank_gold(self, user_id, chat_id, gold):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET bank={gold} WHERE user_id={user_id} AND chat_id={chat_id}")
+
+    def get_today_caravan_available(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT caravan_today FROM users_stat WHERE user_id={user_id} AND chat_id={chat_id}").fetchall()
+
+    def set_today_caravan_available(self, user_id, chat_id, today_caravan_available):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET caravan_today={today_caravan_available} WHERE user_id={user_id} AND chat_id={chat_id}")
+
+    def restore_today_caravan_available(self, user_id, today_caravan_available):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET caravan_today={today_caravan_available} WHERE user_id={user_id}")
+
+    def get_admin_days(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT admin_days FROM users_stat WHERE user_id={user_id} AND chat_id={chat_id}").fetchall()
+
+    def get_admin_days_all_chat_by_user(self, user_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT admin_days, chat_id FROM users_stat WHERE user_id={user_id}").fetchall()
+
+    def set_admin_days(self, user_id, chat_id, days):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET admin_days={days} WHERE user_id={user_id} AND chat_id={chat_id}")
+    
+    def set_admin(self, user_id, chat_id, admin_enable):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET admin={admin_enable} WHERE user_id={user_id} AND chat_id={chat_id}")
+    
+    def get_chat_ids_by_user(self, user_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT chat_id FROM users_stat WHERE user_id={user_id} ORDER BY chat_id DESC").fetchall()
+
+    def get_dice_mod(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT dice_mod FROM users_stat WHERE user_id={user_id}").fetchall()
+
+    def set_dice_mod(self, user_id, chat_id, dice_mod):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET dice_mod={dice_mod} WHERE user_id={user_id} AND chat_id={chat_id}")
+    
+    def restore_dice_mod(self, user_id):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET dice_mod=\"a0d0\" WHERE user_id={user_id}")
+
+    def get_immune_days(self, user_id, chat_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT immune_days FROM users_stat WHERE user_id={user_id} AND chat_id={chat_id}").fetchall()
+
+    def set_immune_days(self, user_id, chat_id, days):
+        with self.connection:
+            self.cursor.execute(f"UPDATE users_stat SET immune_days={days} WHERE user_id={user_id} AND chat_id={chat_id}")
+    
+    def get_immune_days_all_chat_by_user(self, user_id):
+        with self.connection:
+            return self.cursor.execute(f"SELECT immune_days, chat_id FROM users_stat WHERE user_id={user_id}").fetchall()
+
+    def get_build_progress(self, chat_id, build):
+        with self.connection:
+            return self.cursor.execute(f"SELECT {build} FROM global_world WHERE chat_id={chat_id}").fetchall()
+
+    def set_build_progress(self, chat_id, build, progress):
+        with self.connection:
+            self.cursor.execute(f"UPDATE global_world SET {build}={progress} WHERE chat_id={chat_id}")
+
+    def add_new_builder_status(self, chat_id):
+        with self.connection:
+            self.cursor.execute(f"INSERT INTO global_world (chat_id) VALUES ({chat_id})")
 
     # Закрытие подключения к БД
     def close(self):

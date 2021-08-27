@@ -1,11 +1,71 @@
 from sqlighter import SQLighter
 import config_loader as cl
 import dialogs
-import random
+from operator import itemgetter
 
 db = SQLighter(cl.get_DB())
 
-random_events = ["nothing", "add_free_rep", "lose_free_rep", "add_rep", "lose_rep"]
+random_events = ["nothing", "add_free_rep", "lose_free_rep", "add_rep", "lose_rep", "add_gold", "lose_gold"]
+buildings = ["temple", "casino", "fair"]
+buildings_list = {
+    "temple": "храма", 
+    "casino": "казино", 
+    "fair": "ярмарки"
+}
+shop_items = {
+    "admin1": 150,
+    "admin3": 400,
+    "admin7": 900,
+    "title_pidor1": 100,
+    "title_pidor2": 300,
+    "title_pidor3": 1000,
+    "title_thief1": 100,
+    "title_thief2": 300,
+    "title_thief3": 500,
+    "title_bandit1": 100,
+    "title_bandit2": 300,
+    "title_bandit3": 800,
+    "title_robber1": 100,
+    "title_robber2": 500,
+    "title_robber3": 1000,
+    "title_soldier1": 100,
+    "title_soldier2": 500,
+    "title_soldier3": 1000,
+    "title_soldier4": 3000,
+    "title_wolf": 100,
+    "title_pirate": 1000,
+    "title_legend": 9000,
+    "free_rep1": 50,
+    "free_rep5": 200,
+    "free_rep10": 400,
+    "fight_dice": 200,
+    "fight_add_dice": 400,
+    "fight_immune1": 200,
+    "fight_immune3": 500,
+    "fight_immune7": 1000,
+    "fight_resurrection": 100
+}
+titles = {
+    "title_pidor1": "латентный пидор",
+    "title_pidor2": "пидор дня",
+    "title_pidor3": "легендарный пидор",
+    "title_thief1": "мелкий воришка",
+    "title_thief2": "почётный вор",
+    "title_thief3": "главарь воров",
+    "title_bandit1": "бандит",
+    "title_bandit2": "бывалый бандит",
+    "title_bandit3": "главарь бандитов",
+    "title_robber1": "грабитель",
+    "title_robber2": "опытный грабитель",
+    "title_robber3": "неуловимый грабитель",
+    "title_soldier1": "рядовой",
+    "title_soldier2": "сержант",
+    "title_soldier3": "полковник",
+    "title_soldier4": "генерал",
+    "title_wolf": "волк-одиночка",
+    "title_pirate": "информатор",
+    "title_legend": "легенда"
+}
 revolvers = {}
 chat_games = {}
 last_winner = {}
@@ -34,6 +94,289 @@ def check_is_admin(user_id, chat_id):
     else:
         return ""
 
+# Грабительство караванов
+def rob_caravan(user_id, chat_id):
+    if today_caravan_available(user_id, chat_id):
+        gold = dialogs.get_random_int(-100, 100)
+        current_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+        if gold < 1:
+            if current_gold > -gold:
+                answer = f"Грабёж каравана прошёл неудачно. Ты потерял {-gold} золота. У тебя осталось {current_gold + gold} золота."
+                SQLighter.set_gold(db, user_id, chat_id, current_gold + gold)
+            else:
+                answer = f"Грабёж каравана прошёл неудачно. Ты потерял все деньги и остался с пустыми карманами."
+                SQLighter.set_gold(db, user_id, chat_id, 0)
+        else:
+            SQLighter.set_gold(db, user_id, chat_id, current_gold + gold)
+            answer = f"Грабёж каравана прошёл успешно. Ты награбил {gold} золотых. Сейчас у тебя {current_gold + gold} золотых."
+        current_today_caravan_available = int_from_db_answer(SQLighter.get_today_caravan_available(db, user_id, chat_id)[0])
+        SQLighter.set_today_caravan_available(db, user_id, chat_id, current_today_caravan_available - 1)
+    else:
+        answer = "На сегодня попытки грабительства израсходованы. Возвращайтесь завтра."
+    return answer
+
+# Грабительство игроков
+def rob_player(from_user_id, to_user_id, chat_id):
+    if not today_caravan_available(from_user_id, chat_id):
+        return "На сегодня попытки грабительства израсходованы. Возвращайтесь завтра."
+    to_username = str_from_db_answer(SQLighter.get_username_by_id(db, to_user_id)[0])
+    from_username = str_from_db_answer(SQLighter.get_username_by_id(db, from_user_id)[0])
+    from_username_title = get_user_title(from_user_id, chat_id).capitalize()
+    to_username_title = get_user_title(to_user_id, chat_id)
+    answer = f"{from_username_title} {from_username} пытается ограбить {to_username_title} {to_username}.\n"
+    if (from_user_id != to_user_id):
+        i = dialogs.get_random_int(1, 6)
+        dice_mod = str_from_db_answer(SQLighter.get_dice_mod(db, from_user_id, chat_id)[0])
+        add_sum_dice = int(dice_mod[1])
+        add_dice = int(dice_mod[3])
+        if add_sum_dice > 0:
+            i += add_sum_dice
+            answer += f"{from_username_title} {from_username} умело использует подкрутку и увеличивает результат своего броска кубика на {add_sum_dice}.\n"
+        if add_dice > 0:
+            while add_dice > 0:
+                j = dialogs.get_random_int(1, 6)
+                i += j
+                answer += f"{from_username_title} {from_username} обходит правила и кидает ещё один кубик. Выпадает {j}.\n"
+                add_dice -= 1
+        caravan_available = int_from_db_answer(SQLighter.get_today_caravan_available(db, from_user_id, chat_id)[0])
+        SQLighter.set_today_caravan_available(db, from_user_id, chat_id, caravan_available - 1)
+        current_immune_days = int_from_db_answer(SQLighter.get_immune_days(db, to_user_id, chat_id)[0])
+        if current_immune_days > 0:
+            answer += f"{from_username_title} {from_username} атакует {to_username_title} {to_username}, но в дело вмешиваются мистические силы. Атака провалилась, золото осталось у его владельца."
+            return answer
+        current_gold_to_user = int_from_db_answer(SQLighter.get_gold(db, to_user_id, chat_id)[0])
+        if current_gold_to_user > 0:
+            steal_gold = dialogs.get_random_int(1, current_gold_to_user)
+        else:
+            answer += f"{to_username_title.capitalize()} {to_username} выворачивает карманы, а там нет ни единого золотого."
+            return answer
+        if (i < 4):
+            answer += f"\nРезультат броска: {i} из 6. Неудача!\n\nОграбление прошло неудачно и {from_username_title} {from_username} уходит ни с чем."
+        else:
+            current_gold_from_user = int_from_db_answer(SQLighter.get_gold(db, from_user_id, chat_id)[0])
+            if (i < 6):
+                SQLighter.set_gold(db, from_user_id, chat_id, current_gold_from_user + steal_gold)
+                SQLighter.set_gold(db, to_user_id, chat_id, current_gold_to_user - steal_gold)
+                answer += f"\nРезультат броска: {i} из 6.\n\n{from_username_title} {from_username} устраивает засаду и успешно грабит {to_username_title} {to_username}, пока тот в панике защищается.\nКоличество похищенного золота: {steal_gold}."
+            else:
+                steal_gold = current_gold_to_user
+                SQLighter.set_gold(db, from_user_id, chat_id, current_gold_from_user + steal_gold)
+                SQLighter.set_gold(db, to_user_id, chat_id, 0)
+                answer += f"\nРезультат броска: {i} из 6.\n\n{from_username_title} {from_username} проводит настолько идеальную воровскую операцию, что {to_username_title} {to_username} даже не замечает, как всё его золото куда-то исчезло.\nКоличество похищенного золота: {steal_gold}"
+    else:
+        answer = f"{from_username_title} {from_username} пытается ограбить сам себя. Эм... с тобой всё хорошо?"
+    return answer
+
+def today_caravan_available(user_id, chat_id):
+    return int_from_db_answer(SQLighter.get_today_caravan_available(db, user_id, chat_id)[0]) > 0
+
+def get_shop(group):
+    if group is None or group == "":
+        shop_list = "Добро пожаловать в магазин бота. Товаров сейчас много, поэтому введите одну из интересующих вас категорий через пробел после команды /shop:\n"
+        shop_list += "● Админка в чате: admin\n"
+        shop_list += "● Титулы: title\n"
+        shop_list += "● Очки действий: free\n"
+        shop_list += "● Бои и рулетка: fight\n"
+        return shop_list
+    
+    shop_list = "Вот что сейчас есть в наличии:\n"
+    if group == "admin":
+        shop_list += "\n=== Админка в чате ===\n"
+        shop_list += "● Админка в чате на 1 день - 150 золотых.\nКод для покупки: admin1\n"
+        shop_list += "● Админка в чате на 3 дня - 400 золотых.\nКод для покупки: admin3\n"
+        shop_list += "● Админка в чате на 7 дней - 900 золотых.\nКод для покупки: admin7\n"
+        return shop_list
+    if group == "title":
+        shop_list += "\n=== Титулы ===\n"
+        for title_code in titles.keys():
+            shop_list += f"● Титул \"{titles[title_code].capitalize()}\" - {shop_items[title_code]} золотых.\nКод для покупки: {title_code}\n"
+        return shop_list
+    if group == "free":
+        shop_list += "\n=== Очки действий ===\n"
+        shop_list += "● 1 свободное очко действий - 50 золотых.\nКод для покупки: free_rep1\n"
+        shop_list += "● 5 свободных очков действий - 200 золотых.\nКод для покупки: free_rep5\n"
+        shop_list += "● 10 свободных очков действий - 400 золотых.\nКод для покупки: free_rep10\n"
+        return shop_list
+    if group == "fight":
+        shop_list += "\n=== Бои и рулетка ===\n"
+        shop_list += "● Подкрутка кубика на +1 (на день) - 200 золотых. \nКод для покупки: fight_dice\n"
+        shop_list += "● Бросок дополнительного кубика (на день) - 400 золотых. \nКод для покупки: fight_add_dice\n"
+        shop_list += "● Иммунитет к атакам на 1 день - 200 золотых. \nКод для покупки: fight_immune1\n"
+        shop_list += "● Иммунитет к атакам на 3 дня - 500 золотых. \nКод для покупки: fight_immune3\n"
+        shop_list += "● Иммунитет к атакам на 7 дней - 1000 золотых. \nКод для покупки: fight_immune7\n"
+        shop_list += "● Воскрешение в рулетке - 100 золотых. \nКод для покупки: fight_resurrection\n"
+        return shop_list
+    return "Вы указали несуществующую категорию товаров."
+
+def buy(user_id, chat_id, item):
+    if item not in shop_items.keys():
+        return "Такого предмета нет в магазине. Укажите правильный предмет."
+    price = shop_items[item]
+    hand_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+    bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, user_id, chat_id)[0])
+    user_gold = hand_gold + bank_gold
+    if price > user_gold:
+        return "Не хватает золота для покупки."
+    else:
+        if price > hand_gold:
+            SQLighter.set_gold(db, user_id, chat_id, 0)
+            SQLighter.set_bank_gold(db, user_id, chat_id, user_gold - price)
+        else:
+            SQLighter.set_gold(db, user_id, chat_id, hand_gold - price)
+        if "admin" in item:
+            add_days = int(item.replace("admin", ""))
+            current_days = int_from_db_answer(SQLighter.get_admin_days(db, user_id, chat_id)[0])
+            SQLighter.set_admin_days(db, user_id, chat_id, current_days + add_days)
+            SQLighter.set_admin(db, user_id, chat_id, 1)
+            return f"Покупка совершена успешно!\nОсталось дней с админкой: {current_days + add_days}."
+        if "title" in item:
+            title = titles[item]
+            SQLighter.set_user_title(db, title, user_id, chat_id)
+            return f"Покупка совершена успешно!\nТвой новый титул: {title}"
+        if "free_rep" in item:
+            add_free_rep = int(item.replace("free_rep", ""))
+            current_free_rep = int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0])
+            SQLighter.restore_free_rep(db, user_id, current_free_rep + add_free_rep)
+            return f"Покупка совершена успешно!\nДобавлены свободные очки действий.\nОчков свободных действий сейчас: {current_free_rep + add_free_rep}."
+        if "fight" in item:
+            goods = item.replace("fight_", "")
+            if goods == "dice":
+                old_dice_mod = str_from_db_answer(SQLighter.get_dice_mod(db, user_id, chat_id)[0])
+                new_add_dice = int(old_dice_mod[1]) + 1
+                new_dice_mod = f"a{new_add_dice}d{old_dice_mod[3]}"
+                SQLighter.set_dice_mod(db, user_id, chat_id, new_dice_mod)
+                return f"Покупка совершена успешно!\nВ течение дня ваш результат броска кубика увеличивается на {new_add_dice} при атаке другого игрока."
+            if goods == "add_dice":
+                old_dice_mod = str_from_db_answer(SQLighter.get_dice_mod(db, user_id, chat_id)[0])
+                new_add_dice = int(old_dice_mod[3]) + 1
+                new_dice_mod = f"a{old_dice_mod[1]}d{new_add_dice}"
+                SQLighter.set_dice_mod(db, user_id, chat_id, new_dice_mod)
+                return f"Покупка совершена успешно!\nВ течение дня вы кидаете на {new_add_dice} больше кубиков при атаке другого игрока."
+            if "immune" in goods:
+                add_immune_days = int(goods.replace("immune", ""))
+                current_immune_days = int_from_db_answer(SQLighter.get_immune_days(db, user_id, chat_id)[0])
+                SQLighter.set_immune_days(db, user_id, chat_id, current_immune_days + add_immune_days)
+                return f"Покупка совершена успешно!\nТеперь у вас есть защита от нападений игроков. Осталось дней с защитой: {current_immune_days + add_immune_days}"
+            if "resurrection":
+                SQLighter.restore_roulette_today(db, user_id)
+                SQLighter.restore_free_roulette(db, user_id)
+                return "Покупка совершена успешно!\nВы восрешены и можете снова играть в рулетку."
+
+def send_money(from_user_id, chat_id, parameters):
+    current_gold = int_from_db_answer(SQLighter.get_gold(db, from_user_id, chat_id)[0])
+    current_bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, from_user_id, chat_id)[0])
+    from_user_gold = current_gold + current_bank_gold
+    to_username = check_and_get_username(parameters[0])
+    to_user_id = int_from_db_answer(SQLighter.get_id_by_username(db, to_username)[0])
+    to_user_gold = int_from_db_answer(SQLighter.get_bank_gold(db, to_user_id, chat_id)[0])
+    try:
+        send_gold = int(parameters[1])
+    except:
+        return "Указано неверное количество золота."
+    if send_gold < 10 or from_user_gold < send_gold:
+        return "Указано неверное количество золота или его у вас недостаточно для отправки. Минимальная суммая перевода - 5 золотых."
+    else:
+        commission = round(send_gold / 10)
+        if commission > 100:
+            commission = 100
+        if send_gold > current_gold:
+            send_gold -= current_gold
+            SQLighter.set_gold(db, from_user_id, chat_id, 0)
+            SQLighter.set_bank_gold(db, from_user_id, chat_id, current_bank_gold - send_gold)
+            SQLighter.set_bank_gold(db, to_user_id, chat_id, to_user_gold + send_gold - commission)
+        else:
+            SQLighter.set_gold(db, from_user_id, chat_id, current_gold - send_gold)
+            SQLighter.set_bank_gold(db, to_user_id, chat_id, to_user_gold + send_gold - commission)
+        return f"Золото успешно переведено на счёт в банке другого игрока.\nКомиссия за перевод: {commission}."
+
+def transfer_to_bank(user_id, chat_id, money):
+    try:
+        money = int(money)
+    except:
+        return "Указано неверное количество золота."
+    if money < 1:
+        return "Указано неверное количество золота или его у вас недостаточно для отправки в банк."
+    current_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+    current_bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, user_id, chat_id)[0])
+    if current_gold < 1 or money < 1 or money > current_gold:
+        return "Недостаточно золота с собой для отправки в банк."
+    else:
+        SQLighter.set_gold(db, user_id, chat_id, current_gold - money)
+        SQLighter.set_bank_gold(db, user_id, chat_id, current_bank_gold + money)
+        SQLighter.restore_today_caravan_available(db, user_id, 0)
+        return f"{money} золота отправлено в банк. Золота в банке: {current_bank_gold + money}. Золота с собой: {current_gold - money}"
+
+def transfer_to_bank_all(user_id, chat_id):
+    current_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+    current_bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, user_id, chat_id)[0])
+    if current_gold < 1:
+        return "Недостаточно золота с собой для отправки в банк."
+    else:
+        SQLighter.set_gold(db, user_id, chat_id, 0)
+        SQLighter.set_bank_gold(db, user_id, chat_id, current_bank_gold + current_gold)
+        SQLighter.restore_today_caravan_available(db, user_id, 0)
+        return f"Всё золото отправлено в банк. Сейчас золота в банке: {current_bank_gold + current_gold}"
+
+def go_work(user_id, chat_id):
+    today_caravan_available = int_from_db_answer(SQLighter.get_today_caravan_available(db, user_id, chat_id)[0])
+    if today_caravan_available < 5:
+        return "Вы на сегодня слишком вымотаны, чтобы идти на работу.", False
+    else:
+        SQLighter.set_today_caravan_available(db, user_id, chat_id, 0)
+        current_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+        SQLighter.set_gold(db, user_id, chat_id, current_gold + 50)
+        answer = "Опять работа? Ну, ладно. Жить на что-то же надо... держи свои 50 золотых.\n"
+        build = buildings[dialogs.get_random_int(0, len(buildings)-1)]
+        try:
+            current_progress = int_from_db_answer(SQLighter.get_build_progress(db, chat_id, build)[0])
+        except:
+            SQLighter.add_new_builder_status(db, chat_id)
+            current_progress = 0
+        if current_progress + 1 < 100:
+            SQLighter.set_build_progress(db, chat_id, build, current_progress + 1)
+            answer += f"\nСегодня тебя отправили на строительство {buildings_list[build]}.\nПрогресс строительства: {current_progress + 1} из 100"
+        else:
+            SQLighter.set_build_progress(db, chat_id, build, 0)
+            users = SQLighter.get_users_list_from_chat(db, chat_id)
+            if build == "temple":
+                answer += "\nНарод ликует - достроен очередной храм в городе!\nНо его ещё надо обустроить, так что со всех, у кого есть золото, принудительно берётся абсолютно добровольный взнос в 10% от всего накопленного."
+                for user in users:
+                    current_user_id = int_from_db_answer(user[0])
+                    current_user_gold = int_from_db_answer(SQLighter.get_gold(db, current_user_id, chat_id)[0])
+                    current_user_bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, current_user_id, chat_id)[0])
+                    if current_user_gold > 10:
+                        SQLighter.set_gold(db, current_user_id, chat_id, round(current_user_gold / 10) * 9)
+                    if current_user_bank_gold > 10:
+                        SQLighter.set_bank_gold(db, current_user_id, chat_id, round(current_user_bank_gold / 10) * 9)
+            if build == "casino":
+                answer += "\nВсе жители города в предвкушении - открылся очередной игорный дом!\nКонечно же, никто из чата, у кого есть с десяток золотых с собой в кармане, не прошёл мимо и попытал удачу."
+                for user in users:
+                    current_user_id = int_from_db_answer(user[0])
+                    current_username = str_from_db_answer(SQLighter.get_username_by_id(db, current_user_id)[0])
+                    current_title = get_user_title(current_user_id, chat_id).capitalize()
+                    current_user_gold = int_from_db_answer(SQLighter.get_gold(db, current_user_id, chat_id)[0])
+                    if current_user_gold > 10:
+                        roulette_casino = dialogs.get_random_int(0, 101)
+                        if roulette_casino < 21:
+                            answer += f"\n- {current_title} {current_username} бросил вызов казино, но проиграл все деньги."
+                            SQLighter.set_gold(db, current_user_id, chat_id, 0)
+                        if roulette_casino > 20 and roulette_casino < 61:
+                            answer += f"\n- {current_title} {current_username} бросил вызов казино, но проиграл половину своих денег."
+                            SQLighter.set_gold(db, current_user_id, chat_id, round(current_user_gold / 2))
+                        if roulette_casino > 60 and roulette_casino < 91:
+                            answer += f"\n- {current_title} {current_username} бросил вызов казино и вышел победителем, увеличив свой капитал."
+                            SQLighter.set_gold(db, current_user_id, chat_id, current_user_gold + round(current_user_gold / 2))
+                        if roulette_casino > 90:
+                            answer += f"\n- {current_title} {current_username} сорвал джек-пот! Он вынес из казино в 3 раза больше, чем.взял тудо с собой."
+                            SQLighter.set_gold(db, current_user_id, chat_id, current_user_gold * 3)
+            if build == "fair":
+                answer += "\nСегодня у жителей города праздник - наконец подготовление к ярморке завершены!\nЯрмарка проходит красочно, а всем участникам чата выплачивается по 200 золотых в подарок за участие."
+                for user in users:
+                    current_user_id = int_from_db_answer(user[0])
+                    current_user_gold = int_from_db_answer(SQLighter.get_gold(db, current_user_id, chat_id)[0])
+                    SQLighter.set_gold(db, current_user_id, chat_id, current_user_gold + 200)
+        return answer, True
+
 def set_user_title(from_user, chat_id, parameters):
     check_admin = check_is_admin(from_user, chat_id)
     if (check_admin != ""):
@@ -50,7 +393,7 @@ def set_user_title(from_user, chat_id, parameters):
 
 # Функция для преобразования ответа от БД в число.
 def int_from_db_answer(db_answer):
-    answer = str(db_answer).replace("(", "").replace(")", "").replace(",", "").replace("'", "")
+    answer = str_from_db_answer(db_answer)
     if (answer == ""):
         return 0
     else:
@@ -58,7 +401,7 @@ def int_from_db_answer(db_answer):
 
 # Функция для преобразования ответа от БД в строку.
 def str_from_db_answer(db_answer):
-    return str(db_answer).replace("(", "").replace(")", "").replace(",", "").replace("'", "")
+    return str(db_answer).replace("(", "").replace(")", "").replace(",", "").replace("'", "").replace("[", "").replace("]", "").strip()
 
 def get_mystery_dialog():
     return dialogs.get_mystery_dialog()
@@ -78,12 +421,12 @@ def get_random_event(user_id, chat_id):
     if (event == "add_free_rep"):
         rand_free_rep = dialogs.get_random_int(1, 10)
         restore_free_rep_for_user(user_id, to_user, chat_id, rand_free_rep)
-        answer += "Богам не хватает веселья. Они дарят доступные очки репутации в размере {} для {} {}. Пользуйся этим даром с умом.".format(rand_free_rep, user_title, username)
+        answer += "Богам не хватает веселья. Они дарят доступные очки действий в размере {} для {} {}. Пользуйся этим даром с умом.".format(rand_free_rep, user_title, username)
         return answer
     if (event == "lose_free_rep"):
         rand_free_rep = 0 - dialogs.get_random_int(1, 10)
         restore_free_rep_for_user(user_id, to_user, chat_id, rand_free_rep)
-        answer += "Боги на сегодня устали. Щелчком пальцев, {} {} теряет свободную репутацию в размере {}.".format(user_title, username, rand_free_rep)
+        answer += "Боги на сегодня устали. Щелчком пальцев, {} {} теряет очки действий в размере {}.".format(user_title, username, rand_free_rep)
         return answer
     if (event == "add_rep"):
         rand_rep = dialogs.get_random_int(1, 10)
@@ -100,6 +443,29 @@ def get_random_event(user_id, chat_id):
         SQLighter.change_rep(db, rand_user_id, chat_id, current_rep + rand_rep)
         SQLighter.change_pos_rep(db, rand_user_id, chat_id, current_rep_pos_offset + rand_rep)
         answer += "Боги гневаются. А первым попался им под руку {} {}. Бедняга получет на свою голову понижение репутации в размере {}.".format(user_title, username, rand_rep)
+        return answer
+    if event == "add_gold":
+        rand_gold = dialogs.get_random_int(1, 200)
+        current_gold = int_from_db_answer(SQLighter.get_gold(db, rand_user_id, chat_id)[0])
+        SQLighter.set_gold(db, rand_user_id, chat_id, current_gold + rand_gold)
+        answer += "Боги щедрятся. Они осыпают золотом {} {}. Прибыль составила {} золотых.".format(user_title, username, rand_gold)
+        return answer
+    if event == "lose_gold":
+        rand_gold = 0 - dialogs.get_random_int(1, 200)
+        current_gold = int_from_db_answer(SQLighter.get_gold(db, rand_user_id, chat_id)[0])
+        if current_gold < rand_gold:
+            rand_gold -= current_gold
+            SQLighter.set_gold(db, rand_user_id, chat_id, 0)
+            current_bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, rand_user_id, chat_id)[0])
+            if current_bank_gold < rand_gold:
+                SQLighter.set_bank_gold(db, rand_user_id, chat_id, 0)
+                answer += "Завистливые боги не могут спокойно смотреть на золото, накопленное у {} {}. По щелчку их пальцев всё золото превратилось в странного цвета жижу.".format(user_title, username)
+                return answer
+            else:
+                SQLighter.set_bank_gold(db, rand_user_id, chat_id, current_bank_gold - rand_gold)
+        else:
+            SQLighter.set_gold(db, rand_user_id, chat_id, current_gold - rand_gold)
+        answer += "Завистливые боги не могут спокойно смотреть на золото, накопленное у {} {}. По щелчку их пальцев {} золотых превратилось в странного цвета жижу.".format(user_title, username, -rand_gold)
         return answer
     answer += "Но, кажется, сейчас они не в настроении что-то делать."
     return answer
@@ -150,16 +516,32 @@ def change_rep(chat_id, message, from_user, to_user):
 def fight_with_player(from_user, to_user, chat_id):
     free_rep = int_from_db_answer(SQLighter.get_free_rep(db, from_user, chat_id)[0])
     if (free_rep < 2):
-        return "Не хватает доступных очков репутации!\nНужно очков: 2\nДоступно очков: {}".format(free_rep)
+        return "Не хватает доступных очков действий!\nНужно очков: 2\nДоступно очков: {}".format(free_rep)
     to_username = check_and_get_username(to_user)
     to_user_id = int_from_db_answer(SQLighter.get_id_by_username(db, to_username)[0])
     from_username = str_from_db_answer(SQLighter.get_username_by_id(db, from_user)[0])
     from_username_title = get_user_title(from_user, chat_id).title()
     to_username_title = get_user_title(to_user_id, chat_id)
-    answer = "Внимание, зафиксирован бросок кубика!\nРезультат броска: "
+    answer = "Внимание, зафиксирован бросок кубика!\n"
     if (from_user != to_user_id):
         i = dialogs.get_random_int(1, 6)
+        dice_mod = str_from_db_answer(SQLighter.get_dice_mod(db, from_user, chat_id)[0])
+        add_sum_dice = int(dice_mod[1])
+        add_dice = int(dice_mod[3])
+        if add_sum_dice > 0:
+            i += add_sum_dice
+            answer += f"{from_username_title} {from_username} умело использует подкрутку и увеличивает результат своего броска кубика на {add_sum_dice}.\n"
+        if add_dice > 0:
+            while add_dice > 0:
+                j = dialogs.get_random_int(1, 6)
+                i += j
+                answer += f"{from_username_title} {from_username} обходит правила и кидает ещё один кубик. Выпадает {j}.\n"
+                add_dice -= 1
         SQLighter.change_free_rep(db, from_user, chat_id, free_rep - 2)
+        current_immune_days = int_from_db_answer(SQLighter.get_immune_days(db, to_user_id, chat_id)[0])
+        if current_immune_days > 0:
+            answer += f"{from_username_title} {from_username} пытается напасть на {to_username_title} {to_username}, но в дело вмешиваются мистические силы. Атака провалилась, но зато боевая слава участников не пострадала."
+            return answer
         battle_glory_offset = 1
         if (i < 4):
             lose = "Неудача!"
@@ -170,17 +552,17 @@ def fight_with_player(from_user, to_user, chat_id):
             change_battle_glory(to_user_id, chat_id, battle_glory_offset)
             current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
             current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
-            answer += "{} из 6. {}\n\n{} {} {}\nБоевая слава нападающего: {} (-{}).\nБоевая слава жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_battle_glory_from, battle_glory_offset, current_battle_glory_to, battle_glory_offset)
+            answer += "\nРезультат броска: {} из 6. {}\n\n{} {} {}\nБоевая слава нападающего: {} (-{}).\nБоевая слава жертвы: {} (+{}).".format(i, lose, from_username_title, from_username, dialogs.get_fight_dialog(False), current_battle_glory_from, battle_glory_offset, current_battle_glory_to, battle_glory_offset)
         else:
             win = "Удача!"
-            if (i == 6):
+            if (i >= 6):
                 battle_glory_offset = 2
                 win = "Критическая удача!"
             change_battle_glory(from_user, chat_id, battle_glory_offset)
             change_battle_glory(to_user_id, chat_id, 0 - battle_glory_offset)
             current_battle_glory_from = int_from_db_answer(SQLighter.get_battle_glory(db, from_user, chat_id)[0])
             current_battle_glory_to = int_from_db_answer(SQLighter.get_battle_glory(db, to_user_id, chat_id)[0])
-            answer += "{} из 6. {}\n\n{} {} {} {} {}.\nБоевая слава нападающего: {} (+{}).\nБоевая слава жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_battle_glory_from, battle_glory_offset, current_battle_glory_to, battle_glory_offset)
+            answer += "\nРезультат броска: {} из 6. {}\n\n{} {} {} {} {}.\nБоевая слава нападающего: {} (+{}).\nБоевая слава жертвы: {} (-{}).".format(i, win, from_username_title, from_username, dialogs.get_fight_dialog(True), to_username_title, to_username, current_battle_glory_from, battle_glory_offset, current_battle_glory_to, battle_glory_offset)
     else:
         answer = "{} {} {}".format(from_username_title, from_username, dialogs.get_fight_against_yourself_dialog())
     return answer
@@ -297,17 +679,63 @@ def roll(user_id, chat_id):
     return "{} {} бросает кубик. Выпадает {}.".format(username_title.capitalize(), username, dice(1,6))
 
 def dice(start, finish):
-    return random.randint(start, finish)
+    return dialogs.get_random_int(start, finish)
 
 def restore_standard_daily_params():
+    unique_users = []
     user_list = SQLighter.get_users_list(db)
     for user_id_from_bd in user_list:
-        user_id = str_from_db_answer(user_id_from_bd)
+        user_id = int_from_db_answer(user_id_from_bd)
+        if user_id not in unique_users:
+            unique_users.append(user_id)
+    for user_id in unique_users:
         SQLighter.restore_free_rep(db, user_id, 10)
         SQLighter.restore_neg_and_pos_rep(db, user_id)
         SQLighter.restore_free_roulette(db, user_id)
         SQLighter.restore_roulette_today(db, user_id)
         SQLighter.restore_battle_glory_offset(db, user_id)
+        SQLighter.restore_today_caravan_available(db, user_id, 5)
+        SQLighter.restore_dice_mod(db, user_id)
+        current_immune = SQLighter.get_immune_days_all_chat_by_user(db, user_id)
+        for immune in current_immune:
+            day = int_from_db_answer(immune[0])
+            immune_chat_id = int_from_db_answer(immune[1])
+            if day > 0:
+                SQLighter.set_immune_days(db, user_id, immune_chat_id, day - 1)
+        current_admin = SQLighter.get_admin_days_all_chat_by_user(db, user_id)
+        for admin in current_admin:
+            day = int_from_db_answer(admin[0])
+            admin_chat_id = int_from_db_answer(admin[1])
+            if day > 0:
+                SQLighter.set_admin_days(db, user_id, admin_chat_id, day - 1)
+                if day - 1 == 0:
+                    SQLighter.set_admin(db, user_id, admin_chat_id, 0)
+                else:
+                    SQLighter.set_admin(db, user_id, admin_chat_id, 1)
+        current_bank_gold = SQLighter.get_bank_gold_all_chat_by_user(db, user_id)
+        for bank_gold in current_bank_gold:
+            gold = int_from_db_answer(bank_gold[0])
+            bank_chat_id = int_from_db_answer(bank_gold[1])
+            if gold > 10:
+                SQLighter.set_bank_gold(db, user_id, bank_chat_id, gold - 10)
+            else:
+                SQLighter.set_bank_gold(db, user_id, bank_chat_id, 0)
+                current_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, bank_chat_id))
+                SQLighter.set_gold(db, user_id, bank_chat_id, current_gold + gold)
+
+def test():
+    print("Hello")
+
+def service_work(gold):
+    user_list = SQLighter.get_users_list(db)
+    for user_id_from_bd in user_list:
+        user_id = int_from_db_answer(user_id_from_bd)
+        current_bank_gold = SQLighter.get_bank_gold_all_chat_by_user(db, user_id)
+        for bank_gold in current_bank_gold:
+            current_gold = int_from_db_answer(bank_gold[0])
+            bank_chat_id = int_from_db_answer(bank_gold[1])
+            SQLighter.set_bank_gold(db, user_id, bank_chat_id, current_gold + int(gold))
+    return "Рассылка завершена!", get_all_chat_ids()
 
 def restore_free_rep_for_user(from_user, to_user, chat_id, free_rep):
     check_admin = check_is_admin(from_user, chat_id)
@@ -363,8 +791,15 @@ def get_my_top(user_id, username, chat_id):
     answer += get_user_top_message(user_id, chat_id, True)
     answer += get_user_top_rep(user_id, chat_id, True)
     answer += get_user_top_act(user_id, chat_id, True)
+    answer += get_user_top_fg(user_id, chat_id, True)
+    answer += get_user_top_pirate(user_id, chat_id, True)
     return answer
 
+def get_my_gold(user_id, chat_id):
+    current_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id))
+    current_bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, user_id, chat_id))
+    return f"Всего золота: {current_gold + current_bank_gold}\nЗолото с собой: {current_gold}\nЗолото в банке: {current_bank_gold}"
+    
 def get_top_message(user_id, chat_id, count):
     check_admin = check_is_admin(user_id, chat_id)
     if (check_admin != ""):
@@ -498,6 +933,47 @@ def get_top_fight(user_id, chat_id, count):
     else:
         return get_user_top_fg(to_user, chat_id, False)
 
+def get_top_pirate(user_id, chat_id, count):
+    check_admin = check_is_admin(user_id, chat_id)
+    if (check_admin != ""):
+        return check_admin
+    try:
+        count = int(count)
+    except:
+        may_be_user = check_and_get_username(count)
+        count = 0
+    if (count < 1):
+        count = 0
+    try:
+        to_user = int_from_db_answer(SQLighter.get_id_by_username(db, may_be_user)[0])
+    except:
+        to_user = ""
+    if (to_user == ""):
+        count_pirate = ""
+        if (count > 0):
+            count_pirate = "-{}".format(count)
+        top_pirates = SQLighter.get_top_pirate_list(db, chat_id)
+        top_pirate_list = []
+        for user in top_pirates:
+            top_pirate_list.append((user[0], user[1] + user[2]))
+        top_pirate_list = sorted(top_pirate_list, key=itemgetter(1), reverse=True)
+        if count != 0:
+            top_pirate_list = top_pirate_list[0:count]
+        else:
+            top_pirate_list = top_pirate_list
+        answer = "Топ{} по накопленному золоту:\n".format(count_pirate)
+        i = 1
+        for top_user in top_pirate_list:
+            user_and_pirate = str_from_db_answer(top_user).split(" ")
+            user_id = user_and_pirate[0]
+            username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+            pirate_count = user_and_pirate[1]
+            answer += "{}. {} {}. Накоплено золота: {}\n".format(i, get_user_title(user_id, chat_id).title(), username, pirate_count)
+            i += 1
+        return answer
+    else:
+        return get_user_top_pirate(to_user, chat_id, False)
+
 def get_user_top_message(user_id, chat_id, my_stat):
     top_msg_list = SQLighter.get_top_message_list(db, chat_id, 0)
     user_msg = int_from_db_answer(SQLighter.get_message_count_stat(db, user_id, chat_id)[0])
@@ -580,6 +1056,32 @@ def get_user_top_fg(user_id, chat_id, my_stat):
             i += 1
     return answer
 
+def get_user_top_pirate(user_id, chat_id, my_stat):
+    top_pirates = SQLighter.get_top_pirate_list(db, chat_id)
+    top_pirate_list = []
+    for user in top_pirates:
+        top_pirate_list.append((user[0], user[1] + user[2]))
+    top_pirate_list = sorted(top_pirate_list, key=itemgetter(1), reverse=True)
+    hand_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+    bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, user_id, chat_id)[0])
+    user_gold = hand_gold + bank_gold
+    username = str_from_db_answer(SQLighter.get_username_by_id(db, user_id)[0])
+    i = 1
+    answer = "{}, тебя нет в топе. Обратись к администратору бота.".format(username)
+    if my_stat:
+        for top_user in top_pirate_list:
+            user_and_pirate = str_from_db_answer(top_user).split(" ")
+            if (user_id == int(user_and_pirate[0])):
+                answer = "Накоплено золота: {}\nРанг в топе по накопленному золоту: {}\n".format(user_gold, i)
+            i += 1
+    else:
+        for top_user in top_pirate_list:
+            user_and_pirate = str_from_db_answer(top_user).split(" ")
+            if (user_id == int(user_and_pirate[0])):
+                answer = "{} {}.\Накоплено золота: {}\nРанг в топе: {}\n".format(get_user_title(user_id, chat_id).title(), username, user_gold, i)
+            i += 1
+    return answer
+
 def get_main_pos(chat_id):
     top_user_id = int_from_db_answer(SQLighter.get_user_id_by_top_rep_pos_offset(db, chat_id)[0])
     top_user_rep_offset = int_from_db_answer(SQLighter.get_rep_pos_offset(db, top_user_id, chat_id)[0])
@@ -653,10 +1155,17 @@ def status_by_user(user_id, chat_id):
     result_text += rep
     fg = get_user_top_fg(user_id, chat_id, True)
     result_text += fg
-    free_rep = "Свободных очков репутации: {}".format(int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0]))
+    pirate = get_user_top_pirate(user_id, chat_id, True)
+    result_text += pirate
+    free_rep = "Очков действий: {}".format(int_from_db_answer(SQLighter.get_free_rep(db, user_id, chat_id)[0]))
     result_text += free_rep + CR
     current_battle_glory = "Боевая слава: {}".format(int_from_db_answer(SQLighter.get_battle_glory(db, user_id, chat_id)[0]))
     result_text += current_battle_glory + CR
+    hand_gold = int_from_db_answer(SQLighter.get_gold(db, user_id, chat_id)[0])
+    bank_gold = int_from_db_answer(SQLighter.get_bank_gold(db, user_id, chat_id)[0])
+    user_gold = hand_gold + bank_gold
+    current_gold = f"Накоплено золота: {user_gold}"
+    result_text += current_gold + CR
     status = result_text + line
     return status
 

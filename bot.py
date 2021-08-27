@@ -1,19 +1,14 @@
 import config_loader as cl
 import bot_funcs as f
 
-import logging
 from datetime import datetime
 import pytz
 import asyncio
 from aiogram import Bot, Dispatcher, executor, types
 
-logging.basicConfig(level=logging.INFO)
-
 token = cl.get_token()
 bot = Bot(token)
 dp = Dispatcher(bot)
-
-
 
 errorMessage = "Кажется, что-то пошло не так. Пожалуйста, сообщите администратору бота об этом случае."
 userErrorMessage = "Параметры заполнены неверно. Повторите попытку."
@@ -25,7 +20,24 @@ async def start(message: types.Message):
 
 @dp.message_handler(commands=["test"])
 async def test(message: types.Message):
-    await message.answer(str(f.last_winner))
+    f.test()
+
+@dp.message_handler(commands=["service_work"])
+async def service_work(message: types.Message):
+    if message.from_user.username == 'nuPATEXHuK':
+        parameters = message.text.replace("/service_work", "").replace("@AppleBunBot", "").strip().split(" ")
+        if (len(parameters) > 2):
+            gold = parameters[0]
+            message_text = ''
+            for i, message_part in enumerate(parameters):
+                if i != 0:
+                    message_text += message_part + " "
+            answer, chat_ids = f.service_work(gold)
+        if answer != '':
+            for chat_id in chat_ids:
+                await bot.send_message(chat_id, message_text)
+        else:
+            await message.answer(errorMessage)
 
 @dp.message_handler(commands=["fight"])
 async def fight(message: types.Message):
@@ -110,6 +122,19 @@ async def top_fight(message: types.Message):
         except:
             await message.answer(errorMessage)
 
+@dp.message_handler(commands=["top_pirate"])
+async def top_fight(message: types.Message):
+    if (message.chat.id < 0):
+        count = message.text.replace("/top_pirate", "").replace("@AppleBunBot", "").strip().split(" ")
+        answer = f.get_top_pirate(message.from_user.id, message.chat.id, count[0])
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+
 @dp.message_handler(commands=["top_my"])
 async def top_my(message: types.Message):
     if (message.chat.id < 0):
@@ -121,6 +146,20 @@ async def top_my(message: types.Message):
             await bot.delete_message(message.chat.id, message.message_id + 1)
         except:
             await message.answer(errorMessage)
+
+@dp.message_handler(commands=["gold_my"])
+async def top_my(message: types.Message):
+    if (message.chat.id < 0):
+        answer = f.get_my_gold(message.from_user.id, message.chat.id)
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+    else:
+        await message.answer("Команда работает только в чате.")
 
 @dp.message_handler(commands=["stat"])
 async def status(message: types.Message):
@@ -179,6 +218,12 @@ async def set_title(message: types.Message):
 async def random(message: types.Message):
     if (message.chat.id < 0):
         await message.answer(f.get_random_event(message.from_user.id, message.chat.id))
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
 
 @dp.message_handler(commands=["roulette"])
 async def roulette(message: types.Message):
@@ -234,6 +279,112 @@ async def magic_ball(message: types.Message):
             await message.answer(userErrorMessage)
         else:
             await message.answer(answer)
+
+# Грабить корованы
+@dp.message_handler(commands=["rob_caravan"])
+async def caravan(message: types.Message):
+    answer = f.rob_caravan(message.from_user.id, message.chat.id)
+    if answer != "":
+        await message.answer(answer)
+        await asyncio.sleep(60)
+        try:
+            await bot.delete_message(message.chat.id, message.message_id)
+            await bot.delete_message(message.chat.id, message.message_id + 1)
+        except:
+            await message.answer(errorMessage)
+    else:
+        await message.answer(errorMessage)
+
+@dp.message_handler(commands=["rob"])
+async def rob(message: types.Message):
+    if message.chat.id < 0 and message.reply_to_message is not None and message.reply_to_message.from_user.id != bot.id:
+        answer = f.rob_player(message.from_user.id, message.reply_to_message.from_user.id, message.chat.id)
+        if answer != "":
+            await message.answer(answer)
+        else:
+            await message.answer(userErrorMessage)
+
+
+@dp.message_handler(commands=["shop"])
+async def shop(message: types.Message):
+    if message.chat.id < 0:
+        await message.answer("Товары магазина можно посмотреть только в личных сообщениях с ботом.")
+    else:
+        group = message.text.replace("/shop", "").replace("@AppleBunBot", "").strip()
+        answer = f.get_shop(group)
+        if answer != "":
+            await message.answer(answer)
+            await asyncio.sleep(3600)
+            try:
+                await bot.delete_message(message.chat.id, message.message_id)
+                await bot.delete_message(message.chat.id, message.message_id + 1)
+            except:
+                await message.answer(errorMessage)
+        else:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["buy"])
+async def buy(message: types.Message):
+    if message.chat.id < 0:
+        item = message.text.replace("/buy", "").replace("@AppleBunBot", "").strip()
+        answer = f.buy(message.from_user.id, message.chat.id, item)
+        if answer != "":
+            await message.answer(answer)
+        else:
+            await message.answer(errorMessage)
+    else:
+        await message.answer("Покупки можно совершать только в чате.")
+
+@dp.message_handler(commands=["send_money"])
+async def send_money(message: types.Message):
+    if (int(message.chat.id) < 0):
+        answer = userErrorMessage
+        error = True
+        parameters = message.text.replace("/send_money", "").replace("@AppleBunBot", "").strip().split(" ")
+        if (len(parameters) >= 2):
+                i = 2
+                while (i < len(parameters)):
+                    parameters[1] += " {}".format(parameters[i])
+                    i += 1
+                answer = f.send_money(message.from_user.id, message.chat.id, parameters)
+                if (answer != ""):
+                    error = False
+        if (error):
+            await message.answer(userErrorMessage)
+        else:
+            await message.answer(answer)
+
+@dp.message_handler(commands=["save"])
+async def save_money(message: types.Message):
+    if message.chat.id < 0:
+        money = message.text.replace("/save", "").replace("@AppleBunBot", "").strip()
+        answer = f.transfer_to_bank(message.from_user.id, message.chat.id, money)
+        if answer != "":
+            await message.answer(answer)
+        else:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["save_all"])
+async def save_money(message: types.Message):
+    if message.chat.id < 0:
+        answer = f.transfer_to_bank_all(message.from_user.id, message.chat.id)
+        if answer != "":
+            await message.answer(answer)
+        else:
+            await message.answer(errorMessage)
+
+@dp.message_handler(commands=["work"])
+async def work(message: types.Message):
+    answer, available = f.go_work(message.from_user.id, message.chat.id)
+    if answer != "":
+        if available:
+            sti = open("stickers/work.webp", "rb")
+            await message.answer(answer)
+            await message.answer_sticker(sti)
+        else:
+            await message.answer(answer)
+    else:
+        await message.answer(errorMessage)
 
 @dp.message_handler(commands=["bonk"])
 async def bonk(message: types.Message):
@@ -315,47 +466,6 @@ async def scheduler(wait_for):
         await asyncio.sleep(wait_for)
         now = datetime.strftime(datetime.now(pytz.timezone('Europe/Moscow')), "%X")
         if (now == "00:00:00"):
-            chat_ids = f.get_all_chat_ids()
-            if (len(chat_ids) > 0):
-                for chat_id in f.get_all_chat_ids():
-                    await bot.send_message(chat_id, "Дамы и господа, подводим итоги дня!")
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "В эфире передача 💥 \"Русская рулетка\" 💥!\nИтак, давайте же узнаем, кто у нас на сегодня сыграл в ящик.")
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "3 - ищем улики на месте преступления 🔍")
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "2 - проверяем подворотни 👀")
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "1 - обзванием морги ☎️")
-                    await asyncio.sleep(1)
-                    dead_list = f.get_all_dead(chat_id)
-                    if (len(dead_list) > 0):
-                        dead_report = ""
-                        for dead in dead_list:
-                            dead_report += dead + ".\nПричина смерти: " + f.dialogs.get_cause_of_death() + "\n"
-                        dead_report += "\n Помянем павших."
-                        await bot.send_message(chat_id, "А вот и список мертвецов на сегодня, которые бросили вызов и проиграли:\n{}".format(dead_report))
-                    else:
-                        await bot.send_message(chat_id, "Вот это да! Ни единого трупа не нашлось. Что это? Удача? Или же страх перед опасной игрой? 😏")
-                    await asyncio.sleep(3)
-                    await bot.send_message(chat_id, "Но это ещё не всё. Давайте посмотрим, кто у нас сегодня {}, а кто {}".format(f.dialogs.get_fight_top(), f.dialogs.get_fight_loser()))
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "3 - считаем циферки с уроном 🧮")
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "2 - заглядываем на главную арену чата ⚔️🛡")
-                    await asyncio.sleep(1)
-                    await bot.send_message(chat_id, "1 - строим на глаз график побед и поражений 📈📉")
-                    await asyncio.sleep(1)
-                    fight_top = f.get_fight_top(chat_id)
-                    fight_loser = f.get_fight_loser(chat_id)
-                    if (fight_top != "" or fight_loser != ""):
-                        if (fight_top != ""):
-                            fight_top = "Лучший боец: {}\n\n".format(fight_top)
-                        if (fight_loser != ""):
-                            fight_loser = "Худший боец: {}".format(fight_loser)
-                        await bot.send_message(chat_id, "{}{}".format(fight_top, fight_loser))
-                    else:
-                        await bot.send_message(chat_id, "Арена пустует, людям не хватает хлеба и зрелищ! Ну, может хлеб и есть, а вот в кровавых битвах сильная нехватка. Давайте уже, деритесь!")
             f.restore_standard_daily_params()
 
 # Стартовая функция для запуска бота.
